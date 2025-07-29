@@ -40,6 +40,7 @@ export interface Item {
   type: 'equipment' | 'consumable' | 'trophy';
   effects?: ItemEffect[];
   createdAt: string;
+  used?: boolean; // Track if a consumable item has been used
 }
 
 export interface ItemEffect {
@@ -58,6 +59,13 @@ export interface Achievement {
   triggerType?: string;
   triggerCondition?: string;
   condition?: (attributes: Attributes, events: Event[]) => boolean;
+  // For progress tracking
+  progress?: number;
+  target?: number;
+  // For titles
+  isTitle?: boolean;
+  attributeRequirement?: keyof Attributes;
+  levelRequirement?: number;
 }
 
 export interface AttributeConfig {
@@ -76,4 +84,9 @@ export interface DecayWarning {
   daysSinceLastEvent?: number;
   decayAmount?: number;
   daysUntilDecay?: number;
+}
+
+export interface UserConfig {
+  username: string;
+  avatar: string;
 }

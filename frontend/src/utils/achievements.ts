@@ -1,5 +1,5 @@
 import { Attributes, Event, Achievement, DecayConfig, DecayWarning } from '../types/app.types';
-import { calculateLevel } from './calculations';
+import { calculateLevel, getExpForLevel } from './calculations';
 
 // Achievement system utilities
 
@@ -232,6 +232,96 @@ function getInitialAchievements(): Achievement[] {
       },
       isCustom: false,
       unlockedAt: null
+    },
+
+    // V. 称号成就 (Title Achievements)
+    {
+      id: 'title_int_5',
+      title: '智慧新星',
+      description: '智力达到5级后可获得的称号',
+      icon: 'star',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'int',
+      levelRequirement: 5
+    },
+    {
+      id: 'title_int_10',
+      title: '知识大师',
+      description: '智力达到10级后可获得的称号',
+      icon: 'crown',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'int',
+      levelRequirement: 10
+    },
+    {
+      id: 'title_str_5',
+      title: '力量新秀',
+      description: '体魄达到5级后可获得的称号',
+      icon: 'bolt',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'str',
+      levelRequirement: 5
+    },
+    {
+      id: 'title_str_10',
+      title: '体魄王者',
+      description: '体魄达到10级后可获得的称号',
+      icon: 'shield-alt',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'str',
+      levelRequirement: 10
+    },
+    {
+      id: 'title_vit_5',
+      title: '活力先锋',
+      description: '精力达到5级后可获得的称号',
+      icon: 'battery-full',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'vit',
+      levelRequirement: 5
+    },
+    {
+      id: 'title_cha_5',
+      title: '社交达人',
+      description: '社交达到5级后可获得的称号',
+      icon: 'user-friends',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'cha',
+      levelRequirement: 5
+    },
+    {
+      id: 'title_eq_5',
+      title: '情感专家',
+      description: '情感达到5级后可获得的称号',
+      icon: 'heartbeat',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'eq',
+      levelRequirement: 5
+    },
+    {
+      id: 'title_cre_5',
+      title: '创意天才',
+      description: '创造达到5级后可获得的称号',
+      icon: 'paint-brush',
+      isCustom: false,
+      unlockedAt: null,
+      isTitle: true,
+      attributeRequirement: 'cre',
+      levelRequirement: 5
     }
   ];
 }
@@ -241,7 +331,20 @@ function checkAchievements(attributes: Attributes, events: Event[], currentAchie
   const newlyUnlocked: Achievement[] = [];
   
   currentAchievements.forEach(achievement => {
-    if (!achievement.unlockedAt && !achievement.isCustom && achievement.condition) {
+    // Skip already unlocked achievements
+    if (achievement.unlockedAt) return;
+    
+    // For title achievements
+    if (achievement.isTitle && achievement.attributeRequirement && achievement.levelRequirement) {
+      if (attributes[achievement.attributeRequirement].level >= achievement.levelRequirement) {
+        newlyUnlocked.push({
+          ...achievement,
+          unlockedAt: new Date().toISOString()
+        });
+      }
+    } 
+    // For regular achievements with conditions (both built-in and custom)
+    else if (achievement.condition) {
       if (achievement.condition(attributes, events)) {
         newlyUnlocked.push({
           ...achievement,
@@ -252,6 +355,91 @@ function checkAchievements(attributes: Attributes, events: Event[], currentAchie
   });
   
   return newlyUnlocked;
+}
+
+// Calculate achievement progress
+function calculateAchievementProgress(achievement: Achievement, attributes: Attributes, events: Event[]): number {
+  // For unlocked achievements, always show 100% progress
+  if (achievement.unlockedAt) {
+    return 100;
+  }
+  
+  // For title achievements
+  if (achievement.isTitle && achievement.attributeRequirement && achievement.levelRequirement) {
+    const currentLevel = attributes[achievement.attributeRequirement].level;
+    return Math.min(100, (currentLevel / achievement.levelRequirement) * 100);
+  }
+  
+  // For regular achievements with conditions
+  switch (achievement.id) {
+    case 'int_novice':
+      return Math.min(100, (attributes.int.level / 5) * 100);
+    case 'int_scholar':
+      return Math.min(100, (attributes.int.level / 10) * 100);
+    case 'str_beginner':
+      return Math.min(100, (attributes.str.level / 5) * 100);
+    case 'str_robust':
+      return Math.min(100, (attributes.str.level / 10) * 100);
+    case 'vit_respite':
+      return Math.min(100, (attributes.vit.level / 5) * 100);
+    case 'cha_encounter':
+      return Math.min(100, (attributes.cha.level / 5) * 100);
+    case 'eq_awareness':
+      return Math.min(100, (attributes.eq.level / 5) * 100);
+    case 'cre_inspiration':
+      return Math.min(100, (attributes.cre.level / 5) * 100);
+    case 'first_event':
+      return Math.min(100, (events.length / 1) * 100);
+    case 'consistency_beacon':
+      // Check how many consecutive days we have
+      let consecutiveDays = 0;
+      const today = new Date();
+      for (let i = 0; i < 7; i++) {
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() - i);
+        const hasEventOnDate = events.some(event => {
+          const eventDate = new Date(event.timestamp);
+          return eventDate.toDateString() === targetDate.toDateString();
+        });
+        if (hasEventOnDate) {
+          consecutiveDays++;
+        } else {
+          break;
+        }
+      }
+      return (consecutiveDays / 7) * 100;
+    case 'century_events':
+      return Math.min(100, (events.length / 100) * 100);
+    case 'all_level_10':
+      const levels = Object.values(attributes).map(attr => attr.level);
+      const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
+      return Math.min(100, (avgLevel / 10) * 100);
+    default:
+      // For custom achievements or those without specific progress logic, return 0
+      return 0;
+  }
+}
+
+// Get available titles for each attribute
+function getAvailableTitles(achievements: Achievement[], attributes: Attributes): Record<string, Achievement[]> {
+  const titles: Record<string, Achievement[]> = {
+    int: [],
+    str: [],
+    vit: [],
+    cha: [],
+    eq: [],
+    cre: []
+  };
+  
+  achievements
+    .filter(a => a.isTitle && a.unlockedAt)
+    .forEach(title => {
+      if (title.attributeRequirement) {
+        titles[title.attributeRequirement].push(title);
+      }
+    });
+  
+  return titles;
 }
 
 // Save achievements to localStorage
@@ -360,6 +548,8 @@ function getDecayWarnings(attributes: Attributes, events: Event[]): DecayWarning
 export { 
   getInitialAchievements, 
   checkAchievements, 
+  calculateAchievementProgress,
+  getAvailableTitles,
   saveAchievements, 
   loadAchievements, 
   checkAttributeDecay, 

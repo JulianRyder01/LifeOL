@@ -1,11 +1,14 @@
 import { Attributes, Event, Item, ProjectEvent } from '../types/app.types';
 
-// Local storage utilities for persisting user data
+// Storage keys
 const STORAGE_KEYS = {
   ATTRIBUTES: 'lifeol_attributes',
   EVENTS: 'lifeol_events',
+  ACHIEVEMENTS: 'lifeol_achievements',
   ITEMS: 'lifeol_items',
-  PROJECT_EVENTS: 'lifeol_project_events'
+  PROJECT_EVENTS: 'lifeol_project_events',
+  CONSUMABLE_USAGE: 'lifeol_consumable_usage',
+  SELECTED_TITLES: 'lifeol_selected_titles'
 };
 
 // Save attributes to localStorage
@@ -80,9 +83,18 @@ function loadItems(): Item[] | null {
   }
 }
 
-// Get initial items (empty array)
+// Get initial items with sample items
 function getInitialItems(): Item[] {
-  return [];
+  return [
+    {
+      id: 'sample-item-1',
+      name: '地球仪',
+      description: 'LifeOL官方为了纪念你到来，给你献上的小礼物~',
+      icon: '🌍',
+      type: 'trophy',
+      createdAt: new Date().toISOString()
+    }
+  ];
 }
 
 // Save project events to localStorage
@@ -105,21 +117,58 @@ function loadProjectEvents(): ProjectEvent[] | null {
   }
 }
 
-// Get initial project events (empty array)
+// Get initial project events with sample project
 function getInitialProjectEvents(): ProjectEvent[] {
-  return [];
+  return [
+    {
+      id: 'sample-project-1',
+      title: '熟悉LifeOL的使用',
+      description: '慢慢熟悉使用吧~随着渐渐熟悉，可以把我拖动到完成哦！',
+      progress: 0,
+      createdAt: new Date().toISOString()
+    }
+  ];
 }
 
-export { 
-  saveAttributes, 
-  loadAttributes, 
-  saveEvents, 
-  loadEvents, 
+interface ConsumableUsage {
+  [itemId: string]: {
+    usedCount: number;
+    lastUsedTime: number;
+  };
+}
+
+// Save consumable usage to localStorage
+function saveConsumableUsage(usage: ConsumableUsage): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CONSUMABLE_USAGE, JSON.stringify(usage));
+  } catch (error) {
+    console.error('Failed to save consumable usage:', error);
+  }
+}
+
+// Load consumable usage from localStorage
+function loadConsumableUsage(): ConsumableUsage | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.CONSUMABLE_USAGE);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to load consumable usage:', error);
+    return null;
+  }
+}
+
+export {
+  saveAttributes,
+  loadAttributes,
   getInitialAttributes,
+  saveEvents,
+  loadEvents,
+  getInitialItems,
   saveItems,
   loadItems,
-  getInitialItems,
   saveProjectEvents,
   loadProjectEvents,
-  getInitialProjectEvents
+  getInitialProjectEvents,
+  saveConsumableUsage,
+  loadConsumableUsage
 };

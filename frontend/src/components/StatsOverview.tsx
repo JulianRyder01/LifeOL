@@ -11,7 +11,11 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
   try {
     const levels = Object.values(attributes).map(attr => attr.level);
     const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
-    const totalLevel = Math.max(Math.floor(avgLevel), Math.floor(avgLevel * 1.2)); // At least floor(avgLevel), bonus for balance
+    
+    // 计算调和平均数
+    const harmonicMean = levels.length / levels.reduce((sum, level) => sum + (1 / level), 0);
+    const totalLevel = Math.floor(harmonicMean);
+    
     const totalExp = Object.values(attributes).reduce((sum, attr) => sum + attr.exp, 0);
     const unlockedAchievements = achievements.filter(a => a.unlockedAt).length;
 
@@ -42,7 +46,7 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
             <h2 className="text-xl font-semibold mb-4">总体概览</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">总等级</span>
+                <span className="text-[var(--text-secondary)]">个人发展等级</span>
                 <span className="text-2xl font-bold text-[var(--primary-color)]">{totalLevel}</span>
               </div>
               <div className="flex items-center justify-between">
@@ -56,6 +60,9 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">已获成就</span>
                 <span className="text-xl font-semibold text-yellow-600">{unlockedAchievements}</span>
+              </div>
+              <div className="text-xs text-[var(--text-secondary)] mt-2">
+                小提示：想要提升个人发展等级，就得全面提升、做六边形战士哦~
               </div>
             </div>
           </div>
@@ -82,7 +89,7 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
                         }}
                       ></div>
                       <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold" style={{ color: config.color }}>
+                        <span className="text-sm font-bold" style={{ color: config.color }}>
                           {attr.level}
                         </span>
                       </div>

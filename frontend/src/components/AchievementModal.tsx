@@ -67,7 +67,7 @@ function AchievementModal({ onClose, onSubmit, achievements }: AchievementModalP
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <div className="icon-award text-xl text-yellow-600"></div>
-                成就系统
+                我的成就星碑
               </h2>
               <button
                 onClick={onClose}
