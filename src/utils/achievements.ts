@@ -1,5 +1,5 @@
-import { Attributes, Event, Achievement, DecayConfig, DecayWarning } from '../types/app.types.ts';
-import { calculateLevel } from './calculations.ts';
+import { Attributes, Event, Achievement, DecayConfig, DecayWarning } from '../types/app.types';
+import { calculateLevel } from './calculations';
 
 // Achievement system utilities
 

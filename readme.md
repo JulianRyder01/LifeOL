@@ -60,7 +60,7 @@
 
 我们选择现代化的跨平台技术栈，以实现高效开发与卓越用户体验。
 
--   **前端 (Client)**: **Flutter** (一套代码库，原生适配 Android, Windows, iOS, macOS)
+-   **前端 (Client)**: **React + TypeScript + Vite** (现代化Web技术栈，支持跨平台访问)
 -   **后端 (Server)**: **Node.js + NestJS** (TypeScript)
 -   **数据库 (Database)**: **PostgreSQL**
 -   **云服务 (Cloud)**: AWS / GCP / Azure

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Achievement } from '../types/app.types.ts';
+import { Achievement } from '../types/app.types';
 
 interface AchievementModalProps {
   onClose: () => void;

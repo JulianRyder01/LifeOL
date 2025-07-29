@@ -1,4 +1,4 @@
-import { Attributes, Event } from '../types/app.types.ts';
+import { Attributes, Event } from '../types/app.types';
 
 // Local storage utilities for persisting user data
 const STORAGE_KEYS = {
