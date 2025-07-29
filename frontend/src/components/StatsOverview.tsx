@@ -1,5 +1,6 @@
 import React from 'react';
 import { Attributes, Achievement, AttributeConfig } from '../types/app.types';
+import { getExpForLevel, getProgressToNextLevel } from '../utils/calculations';
 
 interface StatsOverviewProps {
   attributes: Attributes;
@@ -21,6 +22,14 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
       cha: { name: '社交', icon: 'users', color: 'var(--cha-color)' },
       eq: { name: '情感', icon: 'heart', color: 'var(--eq-color)' },
       cre: { name: '创造', icon: 'palette', color: 'var(--cre-color)' }
+    };
+
+    // Calculate next level EXP requirement for each attribute
+    const getNextLevelExp = (currentLevel: number) => {
+      // Using the same formula as in calculations.ts
+      const baseExp = 100;
+      const growthRate = 1.5;
+      return Math.floor(baseExp * Math.pow(growthRate, currentLevel - 1));
     };
 
     // Simple radar chart visualization using CSS
@@ -52,11 +61,15 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
           </div>
           
           <div className="md:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">能力雷达图</h3>
+            <h3 className="text-lg font-semibold mb-4">你的人生属性概览</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(attributes).map(([key, attr]) => {
                 const config = attributeConfig[key];
-                const percentage = (attr.level / maxLevel) * 100;
+                const expPercentage = getProgressToNextLevel(attr.exp, attr.level);
+                const nextLevelExp = getExpForLevel(attr.level + 1);
+                const currentLevelExp = getExpForLevel(attr.level);
+                const expToNext = nextLevelExp - currentLevelExp;
+                const currentExpInLevel = attr.exp - currentLevelExp;
                 
                 return (
                   <div key={key} className="text-center">
@@ -65,7 +78,7 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
                       <div 
                         className="absolute inset-0 rounded-full transition-all duration-500"
                         style={{
-                          background: `conic-gradient(${config.color} ${percentage}%, transparent ${percentage}%)`
+                          background: `conic-gradient(${config.color} ${expPercentage}%, transparent ${expPercentage}%)`
                         }}
                       ></div>
                       <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
@@ -76,6 +89,9 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
                     </div>
                     <div className="text-xs font-medium text-[var(--text-secondary)]">
                       {config.name}
+                    </div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-1">
+                      {currentExpInLevel}/{expToNext} EXP
                     </div>
                   </div>
                 );

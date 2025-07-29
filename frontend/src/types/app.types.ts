@@ -20,6 +20,34 @@ export interface Event {
   timestamp: string;
 }
 
+// TODO: Add support for long-term events with progress tracking
+export interface ProjectEvent {
+  id: string;
+  title: string;
+  description: string;
+  progress: number; // 0-100
+  attributeRewards?: Record<string, number>;
+  itemRewards?: string[]; // IDs of items to reward
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  description: string;
+  icon: string; // Could be emoji, URL to image, or AI-generated image identifier
+  type: 'equipment' | 'consumable' | 'trophy';
+  effects?: ItemEffect[];
+  createdAt: string;
+}
+
+export interface ItemEffect {
+  attribute: keyof Attributes; // Which attribute this affects
+  type: 'fixed' | 'percentage'; // Fixed value or percentage boost
+  value: number; // The value of the effect
+}
+
 export interface Achievement {
   id: string;
   title: string;
