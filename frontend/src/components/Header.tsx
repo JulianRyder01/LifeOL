@@ -24,7 +24,7 @@ function Header({ onAddEvent, onShowAchievements, achievements, activeTab, onTab
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">LifeOL</h1>
+              <h1 className="text-xl font-bold text-purple-600">⚡人生Online <span className="text-gray-500 text-sm">让每一次努力都有迹可循</span></h1>
             </div>
             <nav className="ml-6 flex space-x-8">
               <button

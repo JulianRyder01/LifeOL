@@ -16,31 +16,40 @@ export interface Event {
   id: string;
   title: string;
   description: string;
-  expGains: Record<string, number>;
   timestamp: string;
+  expGains: Record<string, number>;
+  relatedItemId?: string; // 添加关联道具ID字段
 }
 
 // TODO: Add support for long-term events with progress tracking
+export interface ProjectEventProgressLog {
+  change: number;        // 进度变化值，正数表示增加，负数表示减少
+  reason: string;        // 变化原因
+  timestamp: string;     // 变化时间
+}
+
 export interface ProjectEvent {
   id: string;
   title: string;
-  description: string;
-  progress: number; // 0-100
+  description?: string;
+  progress: number;
   attributeRewards?: Record<string, number>;
-  itemRewards?: string[]; // IDs of items to reward
+  itemRewards?: string[];
   createdAt: string;
   completedAt?: string;
+  progressLog?: ProjectEventProgressLog[]; // 进度变更记录
 }
 
 export interface Item {
   id: string;
   name: string;
   description: string;
-  icon: string; // Could be emoji, URL to image, or AI-generated image identifier
-  type: 'equipment' | 'consumable' | 'trophy';
+  icon: string;
+  type: 'equipment' | 'consumable' | 'trophy'; // 装备/消耗品/收藏品
   effects?: ItemEffect[];
   createdAt: string;
-  used?: boolean; // Track if a consumable item has been used
+  used?: boolean;
+  usedAt?: string; // 添加使用时间字段
 }
 
 export interface ItemEffect {

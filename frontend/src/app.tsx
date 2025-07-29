@@ -224,8 +224,60 @@ function App() {
 
     // Use a consumable item
     const handleUseItem = (item: Item) => {
-      setItemToUse(item);
-      setShowUseItemModal(true);
+      // Mark item as used with timestamp
+      const updatedItems = items.map(i => 
+        i.id === item.id ? { ...i, used: true, usedAt: new Date().toISOString() } : i
+      );
+      setItems(updatedItems);
+      
+      // Apply item effects to attributes
+      if (item.effects && item.effects.length > 0) {
+        const updatedAttributes = { ...attributes };
+        let hasChanges = false;
+        
+        item.effects.forEach(effect => {
+          if (effect.attribute in updatedAttributes) {
+            hasChanges = true;
+            const currentExp = updatedAttributes[effect.attribute].exp;
+            const expGain = effect.type === 'fixed' 
+              ? effect.value 
+              : Math.floor(currentExp * (effect.value / 100));
+          
+            updatedAttributes[effect.attribute] = {
+              ...updatedAttributes[effect.attribute],
+              exp: currentExp + expGain,
+              level: calculateLevel(currentExp + expGain)
+            };
+          }
+        });
+        
+        if (hasChanges) {
+          setAttributes(updatedAttributes);
+          
+          // Check for new achievements
+          const newAchievements = checkAchievements(updatedAttributes, events, achievements);
+          if (newAchievements.length > 0) {
+            setAchievements(prev => [...prev, ...newAchievements]);
+          }
+        }
+      }
+      
+      // Create event for using item
+      const useEvent: Event = {
+        id: Date.now().toString(),
+        title: `使用道具: ${item.name}`,
+        description: item.description || `使用了 ${item.name}`,
+        timestamp: new Date().toISOString(),
+        expGains: item.effects?.reduce((acc, effect) => {
+          acc[effect.attribute] = effect.type === 'fixed' 
+            ? effect.value 
+            : Math.floor(attributes[effect.attribute].exp * (effect.value / 100));
+          return acc;
+        }, {} as Record<string, number>) || {},
+        relatedItemId: item.id
+      };
+      
+      setEvents(prev => [useEvent, ...prev]);
     };
 
     // Confirm using a consumable item
@@ -289,16 +341,20 @@ function App() {
       setItemToUse(null);
     };
 
-    // Undo using a consumable item
+    // Undo using an item
     const undoUseItem = (itemId: string) => {
-      // Find the corresponding event by ID instead of title
       const item = items.find(i => i.id === itemId);
-      if (!item) return;
+      if (!item || !item.used) return;
       
-      const useEvent = events.find(event => 
-        event.title === `使用道具: ${item.name}` && 
-        event.description.includes(`使用了 ${item.name}，效果:`)
-      );
+      // 检查是否超过两小时
+      const usedTime = new Date(item.usedAt || new Date());
+      const now = new Date();
+      const hoursDiff = Math.abs(now.getTime() - usedTime.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursDiff > 2) {
+        alert('超过两小时，无法撤销使用');
+        return;
+      }
       
       // Revert attribute changes if the item had effects
       if (item.effects && item.effects.length > 0) {
@@ -327,6 +383,7 @@ function App() {
       }
       
       // Remove the event if it exists
+      const useEvent = events.find(e => e.relatedItemId === itemId);
       if (useEvent) {
         const updatedEvents = events.filter(event => event.id !== useEvent.id);
         setEvents(updatedEvents);
@@ -337,6 +394,17 @@ function App() {
         item.id === itemId ? { ...item, used: false } : item
       );
       setItems(updatedItems);
+    };
+
+    // Handle item updates
+    const handleUpdateItem = (id: string, updates: Partial<Omit<Item, 'id' | 'createdAt' | 'used'>>) => {
+      setItems(prev => 
+        prev.map(item => 
+          item.id === id 
+            ? { ...item, ...updates } 
+            : item
+        )
+      );
     };
 
     // Handle title change
@@ -356,13 +424,28 @@ function App() {
     };
 
     // Update project event progress
-    const handleUpdateProjectEvent = (id: string, progress: number) => {
+    const handleUpdateProjectEvent = (id: string, progress: number, reason?: string) => {
       setProjectEvents(prev => 
-        prev.map(event => 
-          event.id === id 
-            ? { ...event, progress } 
-            : event
-        )
+        prev.map(event => {
+          // 只有当事件存在且进度发生变化时才记录日志
+          if (event.id === id && event.progress !== progress) {
+            const change = progress - event.progress;
+            const newLogEntry = {
+              change,
+              reason: reason || '',
+              timestamp: new Date().toISOString()
+            };
+            
+            return { 
+              ...event, 
+              progress,
+              progressLog: event.progressLog 
+                ? [...event.progressLog, newLogEntry] 
+                : [newLogEntry]
+            } as ProjectEvent & { progressLog: { change: number; reason: string; timestamp: string }[] };
+          }
+          return event;
+        })
       );
     };
 
@@ -693,6 +776,12 @@ function App() {
                                       key={attr} 
                                       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                     >
+                                      {attr === 'int' && '🧠'}
+                                      {attr === 'str' && '💪'}
+                                      {attr === 'vit' && '⚡'}
+                                      {attr === 'cha' && '👥'}
+                                      {attr === 'eq' && '❤️'}
+                                      {attr === 'cre' && '🎨'}
                                       {attributeNames[attr] || attr}: +{exp} EXP
                                     </span>
                                   ) : null
@@ -731,6 +820,7 @@ function App() {
                 onAddItem={handleAddItem} 
                 onUseItem={handleUseItem}
                 onUndoUseItem={undoUseItem}
+                onUpdateItem={handleUpdateItem}
                 attributeNames={attributeNames}
               />
             </div>

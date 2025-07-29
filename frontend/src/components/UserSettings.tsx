@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserConfig, saveUserConfig, resetUserData } from '../utils/userConfig';
 
 interface UserSettingsProps {
@@ -10,12 +10,29 @@ interface UserSettingsProps {
 function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsProps) {
   const [username, setUsername] = useState(userConfig.username);
   const [avatar, setAvatar] = useState(userConfig.avatar);
+  const [dontShowTaskCompleteConfirm, setDontShowTaskCompleteConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  useEffect(() => {
+    // 从localStorage加载用户设置
+    const config = localStorage.getItem('lifeol_user_config');
+    if (config) {
+      const parsedConfig = JSON.parse(config);
+      setDontShowTaskCompleteConfirm(parsedConfig.dontShowTaskCompleteConfirm || false);
+    }
+  }, []);
 
   const handleSave = () => {
     const newConfig = { username, avatar };
     saveUserConfig(newConfig);
     onUserConfigChange(newConfig);
+    
+    // 保存任务完成确认提示设置到localStorage
+    const config = localStorage.getItem('lifeol_user_config');
+    const parsedConfig = config ? JSON.parse(config) : {};
+    parsedConfig.dontShowTaskCompleteConfirm = dontShowTaskCompleteConfirm;
+    localStorage.setItem('lifeol_user_config', JSON.stringify(parsedConfig));
+    
     onBack();
   };
 
@@ -81,12 +98,22 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
           <div className="border-b border-gray-200 pb-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">系统设置</h2>
             <div className="space-y-4">
-              <button
-                onClick={() => {}}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                设置
-              </button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">任务完成确认提示</label>
+                  <p className="text-xs text-gray-500 mt-1">进度达到100%时是否显示确认提示</p>
+                </div>
+                <button
+                  onClick={() => setDontShowTaskCompleteConfirm(!dontShowTaskCompleteConfirm)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                    dontShowTaskCompleteConfirm ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                    dontShowTaskCompleteConfirm ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -109,58 +136,51 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
             <div className="space-y-4">
               <button
                 onClick={handleReset}
-                className="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full text-left px-4 py-2 text-sm text-red-600 bg-red-50 rounded-md hover:bg-red-100"
               >
                 重开人生
               </button>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onBack}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            >
-              取消
-            </button>
+          <div className="flex justify-end">
             <button
               onClick={handleSave}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              保存
+              保存设置
             </button>
           </div>
         </div>
-      </div>
 
-      {/* 重置确认弹窗 */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">确认重开人生</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                此操作将永久删除所有数据，包括属性、事件、成就、道具等。此操作不可撤销，您确定要继续吗？
-              </p>
-              
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={cancelReset}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={confirmReset}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                >
-                  确认重置
-                </button>
+        {/* 重置确认弹窗 */}
+        {showResetConfirm && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/3 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">确认重开人生</h3>
+                <p className="text-gray-500 mb-4">
+                  确定要重开人生吗？此操作将清除所有数据，包括属性、事件、成就、道具等。
+                </p>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={cancelReset}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={confirmReset}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+                  >
+                    确认重开
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

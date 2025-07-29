@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ProjectEvent, Item } from '../types/app.types';
+import { ProjectEvent, Item, ProjectEventProgressLog } from '../types/app.types';
 
 interface TaskManagerProps {
   projectEvents: ProjectEvent[];
   items: Item[];
   onAddProjectEvent: (event: Omit<ProjectEvent, 'id' | 'createdAt'>) => void;
-  onUpdateProjectEvent: (id: string, progress: number) => void;
+  onUpdateProjectEvent: (id: string, progress: number, reason?: string) => void;
   onCompleteProjectEvent: (id: string) => void;
   onDeleteProjectEvent: (id: string) => void;
   attributeNames?: Record<string, string>;
@@ -22,6 +22,10 @@ const attributeConfig: Record<string, { name: string; icon: string; color: strin
 
 function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectEvent, onCompleteProjectEvent, onDeleteProjectEvent, attributeNames = {} }: TaskManagerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState<{ id: string; title: string } | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
+  const [progressChangeReason, setProgressChangeReason] = useState<Record<string, string>>({});
   const [newProjectEvent, setNewProjectEvent] = useState({
     title: '',
     description: '',
@@ -31,7 +35,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
   });
   
   // Merge default attribute names with provided ones
-  const mergedAttributeNames: Record<string, { name: string; icon: string; color: string }> = { ...attributeConfig, ...attributeNames };
+  const mergedAttributeNames: Record<string, { name: string; icon: string; color: string } | string> = { ...attributeConfig, ...attributeNames };
   
   const [newReward, setNewReward] = useState({
     attribute: 'int' as keyof typeof attributeConfig,
@@ -78,7 +82,87 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
 
   // 获取属性名称的辅助函数
   const getAttributeName = (attrKey: string) => {
-    return mergedAttributeNames[attrKey]?.name || attrKey;
+    const attr = mergedAttributeNames[attrKey];
+    if (typeof attr === 'string') {
+      return attr;
+    }
+    return attr?.name || attrKey;
+  };
+
+  // 处理进度更新
+  const handleProgressUpdate = (id: string, progress: number) => {
+    const clampedProgress = Math.max(0, Math.min(100, progress)); // 确保进度在0-100之间
+    const reason = progressChangeReason[id] || '';
+    
+    onUpdateProjectEvent(id, clampedProgress, reason);
+    
+    // 清除该任务的变更原因输入
+    setProgressChangeReason(prev => {
+      const newReasons = { ...prev };
+      delete newReasons[id];
+      return newReasons;
+    });
+    
+    // 如果进度达到100%且用户未选择不再提示，则显示确认对话框
+    const projectEvent = projectEvents.find(event => event.id === id);
+    if (clampedProgress >= 100 && projectEvent && !projectEvent.completedAt) {
+      const userConfig = localStorage.getItem('lifeol_user_config');
+      const dontShow = userConfig ? JSON.parse(userConfig).dontShowTaskCompleteConfirm : false;
+      if (!dontShow) {
+        setShowCompleteConfirm({ id, title: projectEvent.title });
+      } else {
+        // 直接标记为完成
+        onCompleteProjectEvent(id);
+      }
+    }
+  };
+
+  // 确认标记完成
+  const confirmComplete = () => {
+    if (showCompleteConfirm) {
+      onCompleteProjectEvent(showCompleteConfirm.id);
+      if (dontShowAgain) {
+        // 保存用户配置到localStorage
+        const userConfig = localStorage.getItem('lifeol_user_config');
+        const config = userConfig ? JSON.parse(userConfig) : {};
+        config.dontShowTaskCompleteConfirm = true;
+        localStorage.setItem('lifeol_user_config', JSON.stringify(config));
+      }
+    }
+    setShowCompleteConfirm(null);
+    setDontShowAgain(false);
+  };
+
+  // 取消标记完成
+  const cancelComplete = () => {
+    setShowCompleteConfirm(null);
+    setDontShowAgain(false);
+  };
+
+  // 显示删除确认
+  const showDeleteConfirmation = (id: string, title: string) => {
+    setShowDeleteConfirm({ id, title });
+  };
+
+  // 确认删除
+  const confirmDelete = () => {
+    if (showDeleteConfirm) {
+      onDeleteProjectEvent(showDeleteConfirm.id);
+    }
+    setShowDeleteConfirm(null);
+  };
+
+  // 取消删除
+  const cancelDelete = () => {
+    setShowDeleteConfirm(null);
+  };
+
+  // 更新进度变更原因
+  const handleReasonChange = (id: string, reason: string) => {
+    setProgressChangeReason(prev => ({
+      ...prev,
+      [id]: reason
+    }));
   };
 
   return (
@@ -118,25 +202,96 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                   ></div>
                 </div>
                 
+                {/* Progress Change Reason Input */}
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    value={progressChangeReason[event.id] || ''}
+                    onChange={(e) => handleReasonChange(event.id, e.target.value)}
+                    placeholder="本次进度改变原因描述（可选）"
+                    className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
                 <div className="mt-4 flex items-center justify-between">
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => onUpdateProjectEvent(event.id, Math.min(100, event.progress + 10))}
-                      className="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                      onClick={() => handleProgressUpdate(event.id, event.progress - 50)}
+                      className="px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
+                    >
+                      -50%
+                    </button>
+                    <button
+                      onClick={() => handleProgressUpdate(event.id, event.progress - 20)}
+                      className="px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
+                    >
+                      -20%
+                    </button>
+                    <button
+                      onClick={() => handleProgressUpdate(event.id, event.progress - 10)}
+                      className="px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
+                    >
+                      -10%
+                    </button>
+                    <button
+                      onClick={() => handleProgressUpdate(event.id, event.progress - 5)}
+                      className="px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
+                    >
+                      -5%
+                    </button>
+                    <button
+                      onClick={() => handleProgressUpdate(event.id, event.progress + 5)}
+                      className="px-2 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    >
+                      +5%
+                    </button>
+                    <button
+                      onClick={() => handleProgressUpdate(event.id, event.progress + 10)}
+                      className="px-2 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700"
                     >
                       +10%
                     </button>
                     <button
-                      onClick={() => onUpdateProjectEvent(event.id, Math.min(100, event.progress + 25))}
-                      className="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                      onClick={() => handleProgressUpdate(event.id, event.progress + 20)}
+                      className="px-2 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700"
                     >
-                      +25%
+                      +20%
+                    </button>
+                    <button
+                      onClick={() => handleProgressUpdate(event.id, event.progress + 50)}
+                      className="px-2 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    >
+                      +50%
                     </button>
                   </div>
+                </div>
+                
+                {/* Progress Change Log */}
+                {(event as ProjectEvent & { progressLog?: ProjectEventProgressLog[] }).progressLog && 
+                 (event as ProjectEvent & { progressLog?: ProjectEventProgressLog[] }).progressLog!.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">进度变更记录</h4>
+                    <div className="mt-1 space-y-1">
+                      {(event as ProjectEvent & { progressLog?: ProjectEventProgressLog[] }).progressLog!.map((log, index) => (
+                        <div key={index} className="text-xs text-gray-600">
+                          <span className={log.change > 0 ? 'text-green-600' : 'text-red-600'}>
+                            {log.change > 0 ? '+' : ''}{log.change}% 
+                          </span> 
+                          {log.reason && ` ${log.reason}`} 
+                          {' '}{new Date(log.timestamp).toLocaleDateString('zh-CN')} 
+                          {' '}{new Date(log.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-4 flex items-center justify-between">
+                  <div></div> {/* Empty div for spacing */}
                   
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => onCompleteProjectEvent(event.id)}
+                      onClick={() => handleProgressUpdate(event.id, 100)}
                       disabled={event.progress < 100}
                       className={`px-3 py-1 text-sm rounded-md ${
                         event.progress >= 100
@@ -144,10 +299,10 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                           : 'text-gray-400 bg-gray-200 cursor-not-allowed'
                       }`}
                     >
-                      完成
+                      标记完成
                     </button>
                     <button
-                      onClick={() => onDeleteProjectEvent(event.id)}
+                      onClick={() => showDeleteConfirmation(event.id, event.title)}
                       className="px-3 py-1 text-sm text-white bg-red-600 rounded-md hover:bg-red-700"
                     >
                       删除
@@ -198,6 +353,26 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                   <p className="text-xs text-gray-400 mt-2">
                     完成于 {new Date(event.completedAt).toLocaleDateString('zh-CN')}
                   </p>
+                )}
+                
+                {/* Progress Change Log for completed events */}
+                {(event as ProjectEvent & { progressLog?: ProjectEventProgressLog[] }).progressLog && 
+                 (event as ProjectEvent & { progressLog?: ProjectEventProgressLog[] }).progressLog!.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">进度变更记录</h4>
+                    <div className="mt-1 space-y-1">
+                      {(event as ProjectEvent & { progressLog?: ProjectEventProgressLog[] }).progressLog!.map((log, index) => (
+                        <div key={index} className="text-xs text-gray-600">
+                          <span className={log.change > 0 ? 'text-green-600' : 'text-red-600'}>
+                            {log.change > 0 ? '+' : ''}{log.change}% 
+                          </span> 
+                          {log.reason && ` ${log.reason}`} 
+                          {' '}{new Date(log.timestamp).toLocaleDateString('zh-CN')} 
+                          {' '}{new Date(log.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 
                 {event.attributeRewards && Object.keys(event.attributeRewards).length > 0 && (
@@ -337,6 +512,77 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
                 >
                   添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Confirmation Modal */}
+      {showCompleteConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/3 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">进度条已达到100%！</h3>
+              <p className="text-gray-500 mb-4">
+                是否标记任务 "{showCompleteConfirm.title}" 完成？
+              </p>
+              
+              <div className="flex items-center mb-4">
+                <input
+                  id="dont-show-again"
+                  type="checkbox"
+                  checked={dontShowAgain}
+                  onChange={(e) => setDontShowAgain(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="dont-show-again" className="ml-2 block text-sm text-gray-700">
+                  不再提示
+                </label>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelComplete}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmComplete}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
+                >
+                  确认完成
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/3 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">确认删除任务</h3>
+              <p className="text-gray-500 mb-4">
+                确定要删除任务 "{showDeleteConfirm.title}" 吗？此操作无法撤销。
+              </p>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDelete}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+                >
+                  确认删除
                 </button>
               </div>
             </div>

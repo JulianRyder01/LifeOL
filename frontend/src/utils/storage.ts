@@ -93,6 +93,21 @@ function getInitialItems(): Item[] {
       icon: '🌍',
       type: 'trophy',
       createdAt: new Date().toISOString()
+    },
+    {
+      id: 'sample-item-2',
+      name: '探索LifeOL使用指南',
+      description: '通过探索LifeOL的各个功能，激发你的创造力',
+      icon: '📘',
+      type: 'consumable',
+      effects: [
+        {
+          attribute: 'cre',
+          type: 'fixed',
+          value: 10
+        }
+      ],
+      createdAt: new Date().toISOString()
     }
   ];
 }
@@ -123,7 +138,7 @@ function getInitialProjectEvents(): ProjectEvent[] {
     {
       id: 'sample-project-1',
       title: '熟悉LifeOL的使用',
-      description: '慢慢熟悉使用吧~随着渐渐熟悉，可以把我拖动到完成哦！',
+      description: '慢慢熟悉使用吧~随着渐渐熟悉，可以点击下方各种按钮让进度达到100%，或点击"标记完成"来直接完成这个任务哦！',
       progress: 0,
       createdAt: new Date().toISOString()
     }
