@@ -97,6 +97,12 @@ function App() {
       return loadUserConfig() || getInitialUserConfig();
     });
     
+    // State for first-time user guide
+    const [showFirstTimeGuide, setShowFirstTimeGuide] = useState<boolean>(() => {
+      const guideShown = localStorage.getItem('lifeol_first_time_guide_shown');
+      return !guideShown; // Show guide if it hasn't been shown before
+    });
+    
     const [showEventModal, setShowEventModal] = useState(false);
     const [showAchievementModal, setShowAchievementModal] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard'); // For navigation
@@ -193,6 +199,12 @@ function App() {
       }
       
       setShowEventModal(false);
+      
+      // Hide first-time guide after first event is added
+      if (showFirstTimeGuide) {
+        setShowFirstTimeGuide(false);
+        localStorage.setItem('lifeol_first_time_guide_shown', 'true');
+      }
     };
 
     // Delete an event
@@ -584,6 +596,28 @@ function App() {
           onTabChange={setActiveTab}
         />
         
+        {/* First-time user guide overlay */}
+        {showFirstTimeGuide && (
+          <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 text-center shadow-xl">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">欢迎来到人生Online!</h2>
+              <p className="text-gray-600 mb-6">
+                这是您人生旅程的开始。点击右上角的「记录事件」按钮来记录您的第一个成就，
+                或者点击任务来创建您的日常任务。
+              </p>
+              <button
+                onClick={() => {
+                  setShowFirstTimeGuide(false);
+                  localStorage.setItem('lifeol_first_time_guide_shown', 'true');
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                我知道了
+              </button>
+            </div>
+          </div>
+        )}
+
         <main className="container mx-auto px-4 py-8 max-w-6xl">
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
@@ -592,8 +626,32 @@ function App() {
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                 <div className="lg:col-span-2">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">当前状态概览</h2>
+                  <div className="mt-8 bg-white rounded-lg shadow p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">当前任务</h2>
+                    {projectEvents.filter(event => !event.completedAt).slice(0, 3).length > 0 ? (
+                      <div className="space-y-4">
+                        {projectEvents.filter(event => !event.completedAt).slice(0, 3).map(event => (
+                          <div key={event.id} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex justify-between">
+                              <h3 className="font-medium text-gray-900">{event.title}</h3>
+                              <span className="text-sm text-gray-500">{Math.round(event.progress)}%</span>
+                            </div>
+                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full" 
+                                style={{ width: `${event.progress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">当前没有进行中的任务</p>
+                    )}
+                  </div>
+                  
+                  <div className="mt-8 bg-white rounded-lg shadow p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">状态概览</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {Object.entries(attributes).map(([key, attr]) => {
                         // Get titles for this attribute
@@ -635,30 +693,6 @@ function App() {
                         );
                       })}
                     </div>
-                  </div>
-                  
-                  <div className="mt-8 bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">当前任务</h2>
-                    {projectEvents.filter(event => !event.completedAt).slice(0, 3).length > 0 ? (
-                      <div className="space-y-4">
-                        {projectEvents.filter(event => !event.completedAt).slice(0, 3).map(event => (
-                          <div key={event.id} className="border border-gray-200 rounded-lg p-4">
-                            <div className="flex justify-between">
-                              <h3 className="font-medium text-gray-900">{event.title}</h3>
-                              <span className="text-sm text-gray-500">{Math.round(event.progress)}%</span>
-                            </div>
-                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full" 
-                                style={{ width: `${event.progress}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500">当前没有进行中的任务</p>
-                    )}
                   </div>
                   
                   <div className="mt-8 bg-white rounded-lg shadow p-6">
