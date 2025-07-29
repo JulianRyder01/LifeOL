@@ -12,5 +12,5 @@ export default defineConfig({
     outDir: 'dist'
   },
   root: '.',  // Set the root to the current directory
-  publicDir: 'public',  // Set the public directory
+  publicDir: '../public',  // Set the public directory to root level public folder
 })

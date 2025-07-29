@@ -1,5 +1,5 @@
 import React from 'react';
-import { Event } from '../types/app.types.ts';
+import { Event } from '../types/app.types';
 
 interface AttributeConfig {
   name: string;

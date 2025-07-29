@@ -1,6 +1,6 @@
 import React from 'react';
-import { Attribute } from '../types/app.types.ts';
-import { getExpForLevel } from '../utils/calculations.ts';
+import { Attribute } from '../types/app.types';
+import { getExpForLevel } from '../utils/calculations';
 
 interface AttributeCardProps {
   attributeKey: string;

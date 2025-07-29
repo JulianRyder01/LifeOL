@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header.tsx';
-import StatsOverview from './components/StatsOverview.tsx';
-import AttributeCard from './components/AttributeCard.tsx';
-import EventList from './components/EventList.tsx';
-import EventModal from './components/EventModal.tsx';
-import AchievementModal from './components/AchievementModal.tsx';
-import { saveAttributes, loadAttributes, saveEvents, loadEvents, getInitialAttributes } from './utils/storage.ts';
-import { calculateLevel } from './utils/calculations.ts';
-import { checkAchievements, saveAchievements, loadAchievements, getInitialAchievements, checkAttributeDecay } from './utils/achievements.ts';
-import { Attributes, Event, Achievement } from './types/app.types.ts';
+import Header from './components/Header';
+import StatsOverview from './components/StatsOverview';
+import AttributeCard from './components/AttributeCard';
+import EventList from './components/EventList';
+import EventModal from './components/EventModal';
+import AchievementModal from './components/AchievementModal';
+import { saveAttributes, loadAttributes, saveEvents, loadEvents, getInitialAttributes } from './utils/storage';
+import { calculateLevel } from './utils/calculations';
+import { checkAchievements, saveAchievements, loadAchievements, getInitialAchievements, checkAttributeDecay } from './utils/achievements';
+import { Attributes, Event, Achievement } from './types/app.types';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -91,7 +91,7 @@ function App() {
         if (warnings.length > 0) {
           setAttributes(updatedAttributes);
           // Could show decay notifications here
-          warnings.forEach(warning => {
+          warnings.forEach((warning: any) => {
             console.log(`属性衰减: ${warning.attribute} 减少了 ${warning.decayAmount} 经验值`);
           });
         }

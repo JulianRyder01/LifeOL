@@ -9,8 +9,8 @@
       "DOM.Iterable"
     ],
     "allowJs": true,
-    "outDir": "./lifeol/dist",
-    "rootDir": "./lifeol",
+    "outDir": "./dist",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -19,17 +19,15 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "types": [
-      "react",
-      "react-dom"
-    ]
+    "noEmit": true
   },
   "include": [
-    "lifeol/**/*"
+    "src/**/*",
+    "main.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "lifeol/dist"
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
   ]
 }

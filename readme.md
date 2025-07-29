@@ -10,13 +10,15 @@
 
 ### 目录 (Table of Contents)
 
-- [🌟 项目愿景 (Project Vision)](#-项目愿景-project-vision)
-- [✨ 核心功能 (Core Features)](#-核心功能-core-features)
-- [🎨 设计理念 (Design Philosophy)](#-设计理念-design-philosophy)
-- [💻 技术栈 (Tech Stack)](#-技术栈-tech-stack)
-- [🚀 路线图 (Roadmap)](#-路线图-roadmap)
-- [🤝 如何贡献 (How to Contribute)](#-如何贡献-how-to-contribute)
-- [📝 许可证 (License)](#-许可证-license)
+- [人生Online (Life Online)](#人生online-life-online)
+    - [目录 (Table of Contents)](#目录-table-of-contents)
+    - [🌟 项目愿景 (Project Vision)](#-项目愿景-project-vision)
+    - [✨ 核心功能 (Core Features)](#-核心功能-core-features)
+    - [🎨 设计理念 (Design Philosophy)](#-设计理念-design-philosophy)
+    - [💻 技术栈 (Tech Stack)](#-技术栈-tech-stack)
+    - [🚀 路线图 (Roadmap)](#-路线图-roadmap)
+    - [🤝 如何贡献 (How to Contribute)](#-如何贡献-how-to-contribute)
+    - [📝 许可证 (License)](#-许可证-license)
 
 ---
 
@@ -70,14 +72,14 @@
 
 项目目前处于 **规划阶段**。我们将分阶段进行开发：
 
--   **Phase 1: MVP (最小可行产品)**
+-   **Phase 1: MVP (最小可行产品)** ✔已实现
     -   **目标**: 验证核心玩法。
-    -   **内容**: 用户系统、核心属性、事件记录、云同步。
+    -   **内容**: 核心属性、事件记录
     -   **平台**: Android & Windows。
 
 -   **Phase 2: 功能增强**
-    -   **目标**: 丰富激励与回顾体系。
-    -   **内容**: 成就系统、目标/习惯打卡、数据报告。
+    -   **目标**: 丰富激励与回顾体系、云端同步和更好的用户体验。
+    -   **内容**: 成就系统、目标/习惯打卡、数据报告、云端同步、事件模板（用户可以创建自己的事件模板，比如“运动模板”-“高运动量“对应体魄+20、“低运动量“对应体魄+10等的模板化操作）、撤销/删除事件功能（会退回该时间未解锁的状态、成就也会恢复）、周期条件事件（比如连续7天运动，就可以触发额外体魄+10的事件；再比如7天无读书，就会导致智力-10）、加入负面事件（用户可以提出负向的增益值，对相应属性有负向调整）
 
 -   **Phase 3: 智能化与社交**
     -   **目标**: 引入AI与正向社交元素。

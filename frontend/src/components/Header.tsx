@@ -1,5 +1,5 @@
 import React from 'react';
-import { Achievement } from '../types/app.types.ts';
+import { Achievement } from '../types/app.types';
 
 interface HeaderProps {
   onAddEvent: () => void;

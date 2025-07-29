@@ -1,5 +1,5 @@
 import React from 'react';
-import { Attributes, Achievement, AttributeConfig } from '../types/app.types.ts';
+import { Attributes, Achievement, AttributeConfig } from '../types/app.types';
 
 interface StatsOverviewProps {
   attributes: Attributes;

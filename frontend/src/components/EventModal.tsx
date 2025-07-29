@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AttributeConfig } from '../types/app.types.ts';
+import { AttributeConfig } from '../types/app.types';
 
 interface EventModalProps {
   onClose: () => void;
