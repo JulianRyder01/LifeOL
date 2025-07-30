@@ -3,7 +3,7 @@ import { AttributeConfig } from '../types/app.types';
 
 interface EventModalProps {
   onClose: () => void;
-  onSubmit: (eventData: { title: string; description: string; expGains: Record<string, number> }) => void;
+  onSubmit: (eventData: { title: string; description: string; expGains: Record<string, number>; useMarkdown?: boolean }) => void;
 }
 
 interface AttributeOption {
@@ -21,6 +21,7 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
   try {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [useMarkdown, setUseMarkdown] = useState(false);
     const [selectedAttributes, setSelectedAttributes] = useState<SelectedAttributes>({});
 
     const attributeOptions: AttributeOption[] = [
@@ -47,13 +48,13 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
     const handleExpChange = (attrKey: string, exp: string) => {
       setSelectedAttributes(prev => ({
         ...prev,
-        [attrKey]: Math.max(1, Math.min(50, parseInt(exp) || 0))
+        [attrKey]: Math.max(-50, Math.min(50, parseInt(exp) || 0))
       }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!title.trim() || Object.keys(selectedAttributes).length === 0) return;
+      if (!title.trim()) return; // 移除了经验选择的必填限制
 
       const expGains: Record<string, number> = {};
       attributeOptions.forEach(attr => {
@@ -63,8 +64,43 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
       onSubmit({
         title: title.trim(),
         description: description.trim(),
-        expGains
+        expGains,
+        useMarkdown
       });
+    };
+
+    // Render description with optional markdown support
+    const renderDescription = (description: string, useMarkdown: boolean = false) => {
+      if (useMarkdown) {
+        // Simple markdown rendering for basic formatting
+        return (
+          <div className="markdown-content">
+            {description.split('\n').map((line, i) => (
+              <p key={i} className="mb-2">
+                {line
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/`(.*?)`/g, '<code>$1</code>')
+                  .split(/(<strong>.*?<\/strong>|<em>.*?<\/em>|<code>.*?<\/code>)/g)
+                  .map((part, j) => {
+                    if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+                      return <strong key={j}>{part.slice(8, -9)}</strong>;
+                    }
+                    if (part.startsWith('<em>') && part.endsWith('</em>')) {
+                      return <em key={j}>{part.slice(4, -5)}</em>;
+                    }
+                    if (part.startsWith('<code>') && part.endsWith('</code>')) {
+                      return <code key={j}>{part.slice(6, -7)}</code>;
+                    }
+                    return part;
+                  })
+                }
+              </p>
+            ))}
+          </div>
+        );
+      }
+      return description;
     };
 
     return (
@@ -98,9 +134,23 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                心情感悟
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-[var(--text-primary)]">
+                  心情感悟
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="event-markdown"
+                    checked={useMarkdown}
+                    onChange={(e) => setUseMarkdown(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded"
+                  />
+                  <label htmlFor="event-markdown" className="ml-1 text-sm text-gray-600">
+                    使用Markdown
+                  </label>
+                </div>
+              </div>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -108,11 +158,16 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
                 rows={3}
                 className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent resize-none"
               />
+              {useMarkdown && (
+                <p className="mt-1 text-xs text-gray-500">
+                  支持 **粗体**、*斜体*、`代码` 等基本Markdown语法
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[var(--text-primary)] mb-3">
-                获得经验 *
+                经验值变化（可选）
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {attributeOptions.map(attr => (
@@ -137,8 +192,8 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
                     </div>
                     {selectedAttributes[attr.key] && (
                       <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1">
-                          {[5, 10, 20].map(exp => (
+                        <div className="flex gap-1 flex-wrap">
+                          {[-10, -5, 5, 10, 20].map(exp => (
                             <button
                               key={exp}
                               type="button"
@@ -152,13 +207,13 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
                                 backgroundColor: selectedAttributes[attr.key] === exp ? attr.color : undefined
                               }}
                             >
-                              {exp}
+                              {exp > 0 ? `+${exp}` : exp}
                             </button>
                           ))}
                         </div>
                         <input
                           type="number"
-                          min="1"
+                          min="-50"
                           max="50"
                           value={selectedAttributes[attr.key]}
                           onChange={(e) => handleExpChange(attr.key, e.target.value)}
@@ -183,7 +238,7 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
               <button
                 type="submit"
                 className="btn btn-primary flex-1"
-                disabled={!title.trim() || Object.keys(selectedAttributes).length === 0}
+                disabled={!title.trim()}
               >
                 保存事件
               </button>

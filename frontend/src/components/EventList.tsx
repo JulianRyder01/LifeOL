@@ -37,6 +37,40 @@ function EventList({ events }: EventListProps) {
       return date.toLocaleDateString('zh-CN');
     };
 
+    // Render description with optional markdown support
+    const renderDescription = (description: string, useMarkdown: boolean = false) => {
+      if (useMarkdown) {
+        // Simple markdown rendering for basic formatting
+        return (
+          <div className="markdown-content">
+            {description.split('\n').map((line, i) => (
+              <p key={i} className="mb-2">
+                {line
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/`(.*?)`/g, '<code>$1</code>')
+                  .split(/(<strong>.*?<\/strong>|<em>.*?<\/em>|<code>.*?<\/code>)/g)
+                  .map((part, j) => {
+                    if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+                      return <strong key={j}>{part.slice(8, -9)}</strong>;
+                    }
+                    if (part.startsWith('<em>') && part.endsWith('</em>')) {
+                      return <em key={j}>{part.slice(4, -5)}</em>;
+                    }
+                    if (part.startsWith('<code>') && part.endsWith('</code>')) {
+                      return <code key={j}>{part.slice(6, -7)}</code>;
+                    }
+                    return part;
+                  })
+                }
+              </p>
+            ))}
+          </div>
+        );
+      }
+      return description;
+    };
+
     return (
       <div className="card" data-name="event-list" data-file="components/EventList.js">
         <div className="flex items-center gap-2 mb-6">
@@ -61,7 +95,7 @@ function EventList({ events }: EventListProps) {
                 
                 {event.description && (
                   <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">
-                    {event.description}
+                    {renderDescription(event.description, (event as any).useMarkdown)}
                   </p>
                 )}
                 

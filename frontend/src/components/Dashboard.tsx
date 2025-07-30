@@ -74,7 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         <div className="space-y-6">
           {/* 每日经验热力图 */}
-          <DailyExpHeatmap events={events} />
+          <DailyExpHeatmap events={events} attributes={attributes} />
           
           {/* 当前道具 */}
           <div className="bg-white rounded-lg shadow p-6">

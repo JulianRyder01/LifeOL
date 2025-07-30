@@ -18,6 +18,7 @@ export interface Event {
   description: string;
   timestamp: string;
   expGains: Record<string, number>;
+  useMarkdown?: boolean; // 添加Markdown支持选项
   relatedItemId?: string; // 添加关联道具ID字段
 }
 
@@ -44,6 +45,7 @@ export interface ProjectEvent {
   completedAt?: string;
   progressLog?: ProjectEventProgressLog[]; // 进度变更记录
   customProgressButtons?: ProgressButtonConfig[]; // 自定义进度按钮
+  useMarkdown?: boolean; // 添加Markdown支持选项
 }
 
 export interface Item {
@@ -81,6 +83,8 @@ export interface Achievement {
   isTitle?: boolean;
   attributeRequirement?: keyof Attributes;
   levelRequirement?: number;
+  // For markdown support
+  useMarkdown?: boolean;
 }
 
 export interface AttributeConfig {

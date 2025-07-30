@@ -617,18 +617,65 @@ function App() {
     const handleAddCustomAchievement = (achievementData: Partial<Achievement>) => {
       const newAchievement: Achievement = {
         id: Date.now().toString(),
-        ...achievementData,
+        title: achievementData.title || '自定义成就',
+        description: achievementData.description || '',
+        icon: achievementData.icon || '🏆',
         isCustom: true,
-        unlockedAt: achievementData.triggerType === 'manual' ? new Date().toISOString() : null
-      } as Achievement;
-      
-      // Add custom condition function if not manual
-      if (achievementData.triggerType !== 'manual' && achievementData.triggerCondition) {
-        newAchievement.condition = createCustomCondition(achievementData.triggerType!, achievementData.triggerCondition);
-      }
+        unlockedAt: null,
+        triggerType: achievementData.triggerType,
+        triggerCondition: achievementData.triggerCondition,
+        progress: achievementData.progress,
+        target: achievementData.target,
+        isTitle: achievementData.isTitle || false,
+        attributeRequirement: achievementData.attributeRequirement,
+        levelRequirement: achievementData.levelRequirement,
+        ...(achievementData as any).useMarkdown !== undefined && { useMarkdown: (achievementData as any).useMarkdown }
+      };
       
       setAchievements(prev => [...prev, newAchievement]);
       setShowAchievementModal(false);
+    };
+
+    const handleAddCustomTitle = (titleData: Partial<Achievement>) => {
+      const newTitle: Achievement = {
+        id: Date.now().toString(),
+        title: titleData.title || '自定义称号',
+        description: titleData.description || '',
+        icon: titleData.icon || '🥇',
+        isCustom: true,
+        isTitle: true,
+        unlockedAt: null,
+        triggerType: titleData.triggerType || 'level',
+        triggerCondition: titleData.triggerCondition,
+        progress: titleData.progress,
+        target: titleData.target,
+        attributeRequirement: titleData.attributeRequirement,
+        levelRequirement: titleData.levelRequirement,
+        ...(titleData as any).useMarkdown !== undefined && { useMarkdown: (titleData as any).useMarkdown }
+      };
+      
+      setAchievements(prev => [...prev, newTitle]);
+    };
+
+    const handleAddCustomBadge = (badgeData: Partial<Achievement>) => {
+      const newBadge: Achievement = {
+        id: Date.now().toString(),
+        title: badgeData.title || '自定义徽章',
+        description: badgeData.description || '',
+        icon: badgeData.icon || '🎖️',
+        isCustom: true,
+        isTitle: false,
+        unlockedAt: null,
+        triggerType: badgeData.triggerType,
+        triggerCondition: badgeData.triggerCondition,
+        progress: badgeData.progress,
+        target: badgeData.target,
+        attributeRequirement: badgeData.attributeRequirement,
+        levelRequirement: badgeData.levelRequirement,
+        ...(badgeData as any).useMarkdown !== undefined && { useMarkdown: (badgeData as any).useMarkdown }
+      };
+      
+      setAchievements(prev => [...prev, newBadge]);
     };
 
     // Helper function to create custom achievement conditions
@@ -756,7 +803,7 @@ function App() {
                   
                   <div className="space-y-6">
                     {/* 每日经验热力图 */}
-                    <DailyExpHeatmap events={events} />
+                    <DailyExpHeatmap events={events} attributes={attributes} />
                     
                     {/* 当前道具 */}
                     <div className="bg-white rounded-lg shadow p-6">
@@ -945,6 +992,10 @@ function App() {
                     attributes={attributes}
                     selectedTitles={selectedTitles}
                     onTitleChange={handleTitleChange}
+                    events={events}
+                    onAddCustomAchievement={handleAddCustomAchievement}
+                    onAddCustomTitle={handleAddCustomTitle}
+                    onAddCustomBadge={handleAddCustomBadge}
                   />
                 </Suspense>
               </div>

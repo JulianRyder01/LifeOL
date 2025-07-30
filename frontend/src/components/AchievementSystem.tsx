@@ -1,44 +1,107 @@
-import React, { useState } from 'react';
-import { Achievement, Attributes } from '../types/app.types';
+import React, { useState, useMemo } from 'react';
+import { Achievement } from '../types/app.types';
+import { Attributes, Event } from '../types/app.types';
+import SevenDaySummaryBadge from './SevenDaySummaryBadge';
 import { calculateAchievementProgress } from '../utils/achievements';
 
 interface AchievementSystemProps {
   achievements: Achievement[];
   attributes: Attributes;
-  onTitleChange: (titleIds: string[]) => void;
+  onTitleChange: (selectedTitles: string[]) => void;
   selectedTitles: string[];
+  events: Event[];
+  onAddCustomAchievement: (achievement: Partial<Achievement>) => void;
+  onAddCustomTitle: (title: Partial<Achievement>) => void;
+  onAddCustomBadge: (badge: Partial<Achievement>) => void;
 }
 
-function AchievementSystem({ achievements, attributes, onTitleChange, selectedTitles }: AchievementSystemProps) {
-  const [activeTab, setActiveTab] = useState<'all' | 'unlocked' | 'locked' | 'titles'>('all');
-  
-  // Filter achievements based on active tab
-  const filteredAchievements = achievements.filter(achievement => {
+const attributeConfig = {
+  int: { name: '智力', icon: '🧠', color: 'text-blue-500' },
+  str: { name: '体魄', icon: '💪', color: 'text-red-500' },
+  vit: { name: '精力', icon: '⚡', color: 'text-yellow-500' },
+  cha: { name: '社交', icon: '👥', color: 'text-green-500' },
+  eq: { name: '情感', icon: '❤️', color: 'text-pink-500' },
+  cre: { name: '创造', icon: '🎨', color: 'text-purple-500' }
+};
+
+const AchievementSystem: React.FC<AchievementSystemProps> = ({
+  achievements,
+  attributes,
+  onTitleChange,
+  selectedTitles,
+  events,
+  onAddCustomAchievement,
+  onAddCustomTitle,
+  onAddCustomBadge
+}) => {
+  const [activeTab, setActiveTab] = useState<'all' | 'unlocked' | 'locked'>('all');
+  const [activeCategory, setActiveCategory] = useState<'achievement' | 'title' | 'badge'>('achievement');
+  const [showAddAchievementForm, setShowAddAchievementForm] = useState(false);
+  const [showAddTitleForm, setShowAddTitleForm] = useState(false);
+  const [showAddBadgeForm, setShowAddBadgeForm] = useState(false);
+  const [newAchievement, setNewAchievement] = useState({
+    title: '',
+    description: '',
+    icon: '🏆',
+    triggerType: 'manual' as 'manual' | 'level' | 'events' | 'keyword' | 'streak',
+    triggerCondition: '',
+    useMarkdown: false
+  });
+  const [newTitle, setNewTitle] = useState({
+    title: '',
+    description: '',
+    icon: '🥇',
+    attributeRequirement: 'int' as keyof Attributes,
+    levelRequirement: 5,
+    useMarkdown: false
+  });
+  const [newBadge, setNewBadge] = useState({
+    title: '',
+    description: '',
+    icon: '🎖️',
+    useMarkdown: false
+  });
+
+  // Filter achievements based on active tab and category
+  const filteredItems = useMemo(() => {
+    let items = achievements;
+    
+    // Filter by category first
+    switch (activeCategory) {
+      case 'achievement':
+        items = items.filter(item => !item.isTitle);
+        break;
+      case 'title':
+        items = items.filter(item => item.isTitle);
+        break;
+      case 'badge':
+        // Badges are handled separately
+        return [];
+    }
+    
+    // Then filter by tab
     switch (activeTab) {
       case 'unlocked':
-        return achievement.unlockedAt !== null;
+        return items.filter(item => item.unlockedAt !== null);
       case 'locked':
-        return achievement.unlockedAt === null && !achievement.isTitle;
-      case 'titles':
-        return achievement.isTitle;
+        return items.filter(item => item.unlockedAt === null);
       default:
-        return true;
+        return items;
     }
-  });
-  
+  }, [achievements, activeTab, activeCategory]);
+
   // Count achievements
-  const builtInUnlockedCount = achievements.filter(a => a.unlockedAt && !a.isCustom).length;
-  const builtInTotalCount = achievements.filter(a => !a.isCustom && !a.isTitle).length;
-  const customUnlockedCount = achievements.filter(a => a.unlockedAt && a.isCustom).length;
-  const customTotalCount = achievements.filter(a => a.isCustom).length;
-  const lockedCount = achievements.filter(a => a.unlockedAt === null && !a.isTitle).length;
-  const titleCount = achievements.filter(a => a.isTitle && a.unlockedAt).length;
-  
+  const achievementUnlockedCount = achievements.filter(a => a.unlockedAt && !a.isTitle).length;
+  const achievementTotalCount = achievements.filter(a => !a.isTitle).length;
+  const titleUnlockedCount = achievements.filter(a => a.isTitle && a.unlockedAt).length;
+  const titleTotalCount = achievements.filter(a => a.isTitle).length;
+  const badgeCount = 7; // Fixed count for badges
+
   // Handle title selection
   const handleTitleSelect = (titleId: string) => {
     const newSelectedTitles = [...selectedTitles];
     const titleIndex = newSelectedTitles.indexOf(titleId);
-    
+
     if (titleIndex >= 0) {
       // Remove title if already selected
       newSelectedTitles.splice(titleIndex, 1);
@@ -51,10 +114,10 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
         newSelectedTitles[0] = titleId;
       }
     }
-    
+
     onTitleChange(newSelectedTitles);
   };
-  
+
   // Get attribute name by key
   const getAttributeName = (attrKey: string) => {
     const attributeNames: Record<string, string> = {
@@ -67,11 +130,11 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
     };
     return attributeNames[attrKey] || attrKey;
   };
-  
+
   // Get trigger condition description for custom achievements
   const getTriggerConditionDescription = (achievement: Achievement) => {
     if (!achievement.isCustom || !achievement.triggerType) return '';
-    
+
     switch (achievement.triggerType) {
       case 'level':
         if (achievement.triggerCondition) {
@@ -91,107 +154,299 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
         return achievement.triggerCondition || '';
     }
   };
-  
+
+  // Render description with optional markdown support
+  const renderDescription = (description: string, useMarkdown: boolean = false) => {
+    if (useMarkdown) {
+      // Simple markdown rendering for basic formatting
+      return (
+        <div className="markdown-content">
+          {description.split('\n').map((line, i) => (
+            <p key={i} className="mb-2">
+              {line
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .split(/(<strong>.*?<\/strong>|<em>.*?<\/em>|<code>.*?<\/code>)/g)
+                .map((part, j) => {
+                  if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+                    return <strong key={j}>{part.slice(8, -9)}</strong>;
+                  }
+                  if (part.startsWith('<em>') && part.endsWith('</em>')) {
+                    return <em key={j}>{part.slice(4, -5)}</em>;
+                  }
+                  if (part.startsWith('<code>') && part.endsWith('</code>')) {
+                    return <code key={j}>{part.slice(6, -7)}</code>;
+                  }
+                  return part;
+                })
+              }
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return description;
+  };
+
+  const handleAddAchievement = () => {
+    if (!newAchievement.title.trim()) return;
+    
+    onAddCustomAchievement({
+      title: newAchievement.title,
+      description: newAchievement.description,
+      icon: newAchievement.icon,
+      isCustom: true,
+      triggerType: newAchievement.triggerType,
+      triggerCondition: newAchievement.triggerCondition,
+      progress: 0,
+      target: newAchievement.triggerType === 'events' ? parseInt(newAchievement.triggerCondition) || 10 : 
+              newAchievement.triggerType === 'streak' ? parseInt(newAchievement.triggerCondition) || 3 : 
+              newAchievement.triggerType === 'level' ? 1 : undefined,
+      useMarkdown: newAchievement.useMarkdown
+    });
+    
+    setNewAchievement({
+      title: '',
+      description: '',
+      icon: '🏆',
+      triggerType: 'manual',
+      triggerCondition: '',
+      useMarkdown: false
+    });
+    setShowAddAchievementForm(false);
+  };
+
+  const handleAddTitle = () => {
+    if (!newTitle.title.trim()) return;
+    
+    onAddCustomTitle({
+      title: newTitle.title,
+      description: newTitle.description,
+      icon: newTitle.icon,
+      isCustom: true,
+      isTitle: true,
+      triggerType: 'level',
+      triggerCondition: `${String(newTitle.attributeRequirement)}:${newTitle.levelRequirement}`,
+      attributeRequirement: newTitle.attributeRequirement,
+      levelRequirement: newTitle.levelRequirement,
+      useMarkdown: newTitle.useMarkdown
+    });
+    
+    setNewTitle({
+      title: '',
+      description: '',
+      icon: '🥇',
+      attributeRequirement: 'int',
+      levelRequirement: 5,
+      useMarkdown: false
+    });
+    setShowAddTitleForm(false);
+  };
+
+  const handleAddBadge = () => {
+    if (!newBadge.title.trim()) return;
+    
+    onAddCustomBadge({
+      title: newBadge.title,
+      description: newBadge.description,
+      icon: newBadge.icon,
+      isCustom: true,
+      useMarkdown: newBadge.useMarkdown
+    });
+    
+    setNewBadge({
+      title: '',
+      description: '',
+      icon: '🎖️',
+      useMarkdown: false
+    });
+    setShowAddBadgeForm(false);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900">我的成就星碑</h2>
-        <div className="text-sm text-gray-500">
-          内置成就已解锁: {builtInUnlockedCount}/{builtInTotalCount} | 自我成就已解锁: {customUnlockedCount}/{customTotalCount}
-        </div>
       </div>
-      
+
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">{builtInUnlockedCount + customUnlockedCount}</div>
-          <div className="text-sm text-gray-600">已解锁</div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-yellow-600">{lockedCount}</div>
-          <div className="text-sm text-gray-600">未解锁</div>
-        </div>
-        <div className="bg-green-50 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">{titleCount}</div>
-          <div className="text-sm text-gray-600">称号</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {achievementTotalCount > 0 ? Math.round((achievementUnlockedCount / achievementTotalCount) * 100) : 0}%
+          </div>
+          <div className="text-sm text-gray-600">成就解锁程度</div>
+          <div className="text-xs text-gray-500 mt-1">
+            {achievementUnlockedCount}已解锁 / {achievementTotalCount - achievementUnlockedCount}未解锁
+          </div>
         </div>
         <div className="bg-purple-50 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-purple-600">
-            {builtInTotalCount + customTotalCount > 0 ? Math.round(((builtInUnlockedCount + customUnlockedCount) / (builtInTotalCount + customTotalCount)) * 100) : 0}%
+            {titleTotalCount > 0 ? Math.round((titleUnlockedCount / titleTotalCount) * 100) : 0}%
           </div>
-          <div className="text-sm text-gray-600">总完成度</div>
+          <div className="text-sm text-gray-600">称号解锁程度</div>
+          <div className="text-xs text-gray-500 mt-1">
+            {titleUnlockedCount}已解锁 / {titleTotalCount - titleUnlockedCount}未解锁
+          </div>
+        </div>
+        <div className="bg-green-50 rounded-lg p-4 text-center">
+          <div className="text-2xl font-bold text-green-600">
+            0%
+          </div>
+          <div className="text-sm text-gray-600">徽章解锁程度</div>
+          <div className="text-xs text-gray-500 mt-1">
+            0已解锁 / {badgeCount}未解锁
+          </div>
         </div>
       </div>
-      
-      {/* Tabs */}
+
+      {/* Category Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
         <button
-          onClick={() => setActiveTab('all')}
+          onClick={() => {
+            setActiveCategory('achievement');
+            setActiveTab('all');
+          }}
           className={`py-2 px-4 text-sm font-medium ${
-            activeTab === 'all'
+            activeCategory === 'achievement'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          全部
+          成就
         </button>
         <button
-          onClick={() => setActiveTab('unlocked')}
+          onClick={() => {
+            setActiveCategory('title');
+            setActiveTab('all');
+          }}
           className={`py-2 px-4 text-sm font-medium ${
-            activeTab === 'unlocked'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          已解锁
-        </button>
-        <button
-          onClick={() => setActiveTab('locked')}
-          className={`py-2 px-4 text-sm font-medium ${
-            activeTab === 'locked'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          未解锁
-        </button>
-        <button
-          onClick={() => setActiveTab('titles')}
-          className={`py-2 px-4 text-sm font-medium ${
-            activeTab === 'titles'
+            activeCategory === 'title'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           称号
         </button>
+        <button
+          onClick={() => {
+            setActiveCategory('badge');
+            setActiveTab('all');
+          }}
+          className={`py-2 px-4 text-sm font-medium ${
+            activeCategory === 'badge'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          徽章
+        </button>
       </div>
-      
-      {/* Achievements List */}
-      {filteredAchievements.length === 0 ? (
+
+      {/* Sub-tabs for achievements and titles */}
+      {activeCategory !== 'badge' && (
+        <div className="flex border-b border-gray-200 mb-6">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`py-2 px-4 text-sm font-medium ${
+              activeTab === 'all'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            全部
+          </button>
+          <button
+            onClick={() => setActiveTab('unlocked')}
+            className={`py-2 px-4 text-sm font-medium ${
+              activeTab === 'unlocked'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            已解锁
+          </button>
+          <button
+            onClick={() => setActiveTab('locked')}
+            className={`py-2 px-4 text-sm font-medium ${
+              activeTab === 'locked'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            未解锁
+          </button>
+          <button
+            onClick={() => {
+              if (activeCategory === 'achievement') {
+                setShowAddAchievementForm(true);
+              } else if (activeCategory === 'title') {
+                setShowAddTitleForm(true);
+              }
+            }}
+            className="ml-auto py-2 px-4 text-sm font-medium text-blue-600 hover:text-blue-800"
+          >
+            + 添加自定义{activeCategory === 'achievement' ? '成就' : '称号'}
+          </button>
+        </div>
+      )}
+
+      {/* Badges Tab Content */}
+      {activeCategory === 'badge' ? (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">七日总结徽章</h3>
+            <button
+              onClick={() => setShowAddBadgeForm(true)}
+              className="py-2 px-4 text-sm font-medium text-blue-600 hover:text-blue-800"
+            >
+              + 添加自定义徽章
+            </button>
+          </div>
+          <SevenDaySummaryBadge events={events} attributes={attributes} />
+          <div className="mt-4 text-sm text-gray-500">
+            <p>徽章根据您最近七天的表现自动生成，每天更新。</p>
+          </div>
+        </div>
+      ) : filteredItems.length === 0 ? (
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">
-            {activeTab === 'titles' ? '暂无称号' : '暂无成就'}
+            {activeCategory === 'title' ? '暂无称号' : '暂无成就'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
             {activeTab === 'locked' 
-              ? '继续努力，解锁更多成就' 
-              : activeTab === 'titles' 
+              ? '继续努力，解锁更多' + (activeCategory === 'title' ? '称号' : '成就') 
+              : activeCategory === 'title' 
                 ? '提升属性等级以解锁称号' 
                 : '开始记录事件以解锁成就'}
           </p>
+          <div className="mt-6">
+            <button
+              onClick={() => {
+                if (activeCategory === 'achievement') {
+                  setShowAddAchievementForm(true);
+                } else if (activeCategory === 'title') {
+                  setShowAddTitleForm(true);
+                }
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              创建第一个自定义{activeCategory === 'achievement' ? '成就' : '称号'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredAchievements.map(achievement => {
+          {filteredItems.map(achievement => {
             const progress = calculateAchievementProgress(achievement, attributes, []);
             const isTitleSelected = selectedTitles.includes(achievement.id);
             const isUnlocked = !!achievement.unlockedAt;
             const triggerConditionDescription = getTriggerConditionDescription(achievement);
-            
+
             return (
               <div 
                 key={achievement.id} 
@@ -208,14 +463,14 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
                       : 'bg-gray-200 text-gray-400'
                   }`}>
                     {achievement.icon ? (
-                      <div className={`icon-${achievement.icon}`} />
+                      <div className="text-xl">{achievement.icon}</div>
                     ) : (
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     )}
                   </div>
-                  
+
                   <div className="ml-4 flex-1">
                     <div className="flex justify-between">
                       <h3 className={`font-medium ${
@@ -234,7 +489,7 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
                         )}
                         {achievement.isCustom && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            自我成就
+                            自我{activeCategory === 'title' ? '称号' : activeCategory === 'achievement' ? '成就' : '徽章'}
                           </span>
                         )}
                         {!achievement.isCustom && !achievement.isTitle && (
@@ -244,7 +499,7 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
                         )}
                         {!achievement.isCustom && achievement.isTitle && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            内置成就
+                            内置称号
                           </span>
                         )}
                       </h3>
@@ -261,19 +516,19 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
                         </button>
                       )}
                     </div>
-                    
-                    <p className={`mt-1 text-sm ${
+
+                    <div className={`mt-1 text-sm ${
                       isUnlocked ? 'text-gray-500' : 'text-gray-400'
                     }`}>
-                      {achievement.description}
-                    </p>
-                    
+                      {renderDescription(achievement.description, achievement.useMarkdown)}
+                    </div>
+
                     {achievement.isCustom && triggerConditionDescription && (
                       <p className="mt-1 text-xs text-gray-500">
                         触发条件: {triggerConditionDescription}
                       </p>
                     )}
-                    
+
                     {!isUnlocked && (
                       <div className="mt-2">
                         <div className="flex justify-between text-xs text-gray-500 mb-1">
@@ -288,7 +543,7 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
                         </div>
                       </div>
                     )}
-                    
+
                     {isUnlocked && achievement.unlockedAt && (
                       <div className="mt-2 text-xs text-gray-500">
                         解锁于 {new Date(achievement.unlockedAt).toLocaleDateString('zh-CN')}
@@ -301,8 +556,322 @@ function AchievementSystem({ achievements, attributes, onTitleChange, selectedTi
           })}
         </div>
       )}
+
+      {/* Add Achievement Modal */}
+      {showAddAchievementForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">添加自定义成就</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
+                  <input
+                    type="text"
+                    value={newAchievement.title}
+                    onChange={(e) => setNewAchievement({...newAchievement, title: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700">描述</label>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="achievement-markdown"
+                        checked={newAchievement.useMarkdown}
+                        onChange={(e) => setNewAchievement({...newAchievement, useMarkdown: e.target.checked})}
+                        className="h-4 w-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="achievement-markdown" className="ml-1 text-sm text-gray-600">
+                        使用Markdown
+                      </label>
+                    </div>
+                  </div>
+                  <textarea
+                    value={newAchievement.description}
+                    onChange={(e) => setNewAchievement({...newAchievement, description: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                  />
+                  {newAchievement.useMarkdown && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      支持 **粗体**、*斜体*、`代码` 等基本Markdown语法
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">图标</label>
+                  <input
+                    type="text"
+                    value={newAchievement.icon}
+                    onChange={(e) => setNewAchievement({...newAchievement, icon: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="输入emoji或字符"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">触发类型</label>
+                  <select
+                    value={newAchievement.triggerType}
+                    onChange={(e) => setNewAchievement({...newAchievement, triggerType: e.target.value as any})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="manual">手动解锁</option>
+                    <option value="level">属性等级</option>
+                    <option value="events">事件数量</option>
+                    <option value="keyword">关键词匹配</option>
+                    <option value="streak">连续记录天数</option>
+                  </select>
+                </div>
+                
+                {newAchievement.triggerType !== 'manual' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {newAchievement.triggerType === 'level' && '属性及等级要求'}
+                      {newAchievement.triggerType === 'events' && '事件数量'}
+                      {newAchievement.triggerType === 'keyword' && '关键词'}
+                      {newAchievement.triggerType === 'streak' && '连续天数'}
+                    </label>
+                    {newAchievement.triggerType === 'level' ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={String(newTitle.attributeRequirement)}
+                          onChange={(e) => setNewAchievement({...newAchievement, triggerCondition: e.target.value + ':' + (newAchievement.triggerCondition.split(':')[1] || '5')})}
+                          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {Object.entries(attributeConfig).map(([key, config]) => (
+                            <option key={key} value={key}>{config.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          min="1"
+                          value={newAchievement.triggerCondition.split(':')[1] || '5'}
+                          onChange={(e) => setNewAchievement({...newAchievement, triggerCondition: (newAchievement.triggerCondition.split(':')[0] || 'int') + ':' + e.target.value})}
+                          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={newAchievement.triggerCondition}
+                        onChange={(e) => setNewAchievement({...newAchievement, triggerCondition: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder={
+                          newAchievement.triggerType === 'events' ? '例如: 10' :
+                          newAchievement.triggerType === 'keyword' ? '例如: 学习' :
+                          newAchievement.triggerType === 'streak' ? '例如: 7' : ''
+                        }
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-5 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowAddAchievementForm(false)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleAddAchievement}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Title Modal */}
+      {showAddTitleForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">添加自定义称号</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
+                  <input
+                    type="text"
+                    value={newTitle.title}
+                    onChange={(e) => setNewTitle({...newTitle, title: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700">描述</label>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="title-markdown"
+                        checked={newTitle.useMarkdown}
+                        onChange={(e) => setNewTitle({...newTitle, useMarkdown: e.target.checked})}
+                        className="h-4 w-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="title-markdown" className="ml-1 text-sm text-gray-600">
+                        使用Markdown
+                      </label>
+                    </div>
+                  </div>
+                  <textarea
+                    value={newTitle.description}
+                    onChange={(e) => setNewTitle({...newTitle, description: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                  />
+                  {newTitle.useMarkdown && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      支持 **粗体**、*斜体*、`代码` 等基本Markdown语法
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">图标</label>
+                  <input
+                    type="text"
+                    value={newTitle.icon}
+                    onChange={(e) => setNewTitle({...newTitle, icon: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="输入emoji或字符"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">属性要求</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={String(newAchievement.triggerCondition.split(':')[0] || 'int')}
+                      onChange={(e) => setNewTitle({...newTitle, attributeRequirement: e.target.value as keyof Attributes})}
+                      className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {Object.entries(attributeConfig).map(([key, config]) => (
+                        <option key={key} value={key}>{config.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min="1"
+                      value={newTitle.levelRequirement}
+                      onChange={(e) => setNewTitle({...newTitle, levelRequirement: parseInt(e.target.value) || 5})}
+                      className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-5 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowAddTitleForm(false)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleAddTitle}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Badge Modal */}
+      {showAddBadgeForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">添加自定义徽章</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
+                  <input
+                    type="text"
+                    value={newBadge.title}
+                    onChange={(e) => setNewBadge({...newBadge, title: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700">描述</label>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="badge-markdown"
+                        checked={newBadge.useMarkdown}
+                        onChange={(e) => setNewBadge({...newBadge, useMarkdown: e.target.checked})}
+                        className="h-4 w-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="badge-markdown" className="ml-1 text-sm text-gray-600">
+                        使用Markdown
+                      </label>
+                    </div>
+                  </div>
+                  <textarea
+                    value={newBadge.description}
+                    onChange={(e) => setNewBadge({...newBadge, description: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                  />
+                  {newBadge.useMarkdown && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      支持 **粗体**、*斜体*、`代码` 等基本Markdown语法
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">图标</label>
+                  <input
+                    type="text"
+                    value={newBadge.icon}
+                    onChange={(e) => setNewBadge({...newBadge, icon: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="输入emoji或字符"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-5 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowAddBadgeForm(false)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleAddBadge}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default AchievementSystem;

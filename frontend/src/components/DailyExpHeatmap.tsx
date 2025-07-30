@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { Event } from '../types/app.types';
+import SevenDaySummaryBadge from './SevenDaySummaryBadge';
 
 interface DailyExpHeatmapProps {
   events: Event[];
+  attributes: any; // 添加attributes属性以传递给徽章组件
 }
 
 interface DailyData {
@@ -10,7 +12,7 @@ interface DailyData {
   totalExp: number;
 }
 
-const DailyExpHeatmap: React.FC<DailyExpHeatmapProps> = ({ events }) => {
+const DailyExpHeatmap: React.FC<DailyExpHeatmapProps> = ({ events, attributes }) => {
   // 计算每日经验值
   const dailyData = useMemo(() => {
     const expByDate: Record<string, number> = {};
@@ -134,6 +136,9 @@ const DailyExpHeatmap: React.FC<DailyExpHeatmapProps> = ({ events }) => {
           <span className="text-xs">正向</span>
         </div>
       </div>
+      
+      {/* 七天总结徽章 */}
+      <SevenDaySummaryBadge events={events} attributes={attributes} />
     </div>
   );
 };
