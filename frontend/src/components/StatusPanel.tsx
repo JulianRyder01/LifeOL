@@ -4,12 +4,35 @@ import { getExpForLevel, getProgressToNextLevel } from '../utils/calculations';
 import AttributeCard from './AttributeCard';
 import { getAvailableTitles } from '../utils/achievements';
 
+// 导入衰减配置
+import { DECAY_CONFIG } from '../utils/achievements';
+
 interface StatusPanelProps {
   attributes: Attributes;
   achievements: Achievement[];
   selectedTitles: string[];
   onTitleChange: (titleIds: string[]) => void;
 }
+
+// 属性中文名称映射
+const attributeNames: Record<string, string> = {
+  int: '智力',
+  str: '体魄',
+  vit: '精力',
+  cha: '社交',
+  eq: '情感',
+  cre: '创造'
+};
+
+// 属性图标映射
+const attributeIcons: Record<string, string> = {
+  int: '🧠',
+  str: '💪',
+  vit: '⚡',
+  cha: '👥',
+  eq: '❤️',
+  cre: '🎨'
+};
 
 function StatusPanel({ attributes, achievements, selectedTitles, onTitleChange }: StatusPanelProps) {
   const attributeConfig: Record<string, AttributeConfig> = {
@@ -97,6 +120,32 @@ function StatusPanel({ attributes, achievements, selectedTitles, onTitleChange }
             )}
           </div>
         ))}
+      </div>
+      
+      {/* 周期触发事件 */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-4">周期触发事件</h3>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 mb-3">
+            以下是你需要定期维护的属性，如果超过指定天数未进行相关活动，属性经验值将会衰减：
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(DECAY_CONFIG).map(([attrKey, config]) => (
+              <div key={attrKey} className="flex items-start p-3 bg-white rounded-lg border border-gray-200">
+                <span className="text-lg mr-2">{attributeIcons[attrKey]}</span>
+                <div>
+                  <h4 className="font-medium text-gray-900">{attributeNames[attrKey]}</h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    超过 <span className="font-semibold text-gray-900">{config.inactiveThreshold}天</span> 未活动，每天衰减 <span className="font-semibold text-gray-900">{(config.decayRate * 100).toFixed(1)}%</span> 当前经验值
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 text-sm text-yellow-700">
+            <p>💡 提示：定期进行各类活动可以保持你的属性值稳定增长，避免衰减。</p>
+          </div>
+        </div>
       </div>
       
       <div className="mt-8">

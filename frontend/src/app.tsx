@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Header from './components/Header';
 import StatsOverview from './components/StatsOverview';
 import AttributeCard from './components/AttributeCard';
@@ -18,6 +18,15 @@ import { calculateLevel } from './utils/calculations';
 import { checkAchievements, saveAchievements, loadAchievements, getInitialAchievements, checkAttributeDecay, getAvailableTitles, calculateAchievementProgress } from './utils/achievements';
 import { saveUserConfig, loadUserConfig, getInitialUserConfig } from './utils/userConfig';
 import { Attributes, Event, Achievement, Item, ProjectEvent, UserConfig } from './types/app.types';
+
+// Lazy load components that are not immediately needed
+const LazyEventManager = lazy(() => import('./components/EventManager'));
+const LazyItemSystem = lazy(() => import('./components/ItemSystem'));
+const LazyTaskManager = lazy(() => import('./components/TaskManager'));
+const LazyStatusPanel = lazy(() => import('./components/StatusPanel'));
+const LazyAchievementSystem = lazy(() => import('./components/AchievementSystem'));
+const LazyUserSettings = lazy(() => import('./components/UserSettings'));
+const LazyAllActivitiesView = lazy(() => import('./components/AllActivitiesView'));
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -861,77 +870,91 @@ function App() {
             {/* Events Tab */}
             {activeTab === 'events' && (
               <div className="mt-4 sm:mt-8">
-                <EventManager 
-                  events={events} 
-                  onDeleteEvent={handleDeleteEvent}
-                  onUpdateEvent={handleUpdateEvent}
-                  attributeNames={attributeNames}
-                />
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+                  <LazyEventManager 
+                    events={events} 
+                    onDeleteEvent={handleDeleteEvent}
+                    onUpdateEvent={handleUpdateEvent}
+                    attributeNames={attributeNames}
+                  />
+                </Suspense>
               </div>
             )}
             
             {/* Items Tab */}
             {activeTab === 'items' && (
               <div className="mt-4 sm:mt-8">
-                <ItemSystem 
-                  items={items} 
-                  onAddItem={handleAddItem} 
-                  onUseItem={handleUseItem}
-                  onUndoUseItem={undoUseItem}
-                  onUpdateItem={handleUpdateItem}
-                  attributeNames={attributeNames}
-                />
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+                  <LazyItemSystem 
+                    items={items} 
+                    onAddItem={handleAddItem} 
+                    onUseItem={handleUseItem}
+                    onUndoUseItem={undoUseItem}
+                    onUpdateItem={handleUpdateItem}
+                    attributeNames={attributeNames}
+                  />
+                </Suspense>
               </div>
             )}
             
             {/* Tasks Tab */}
             {activeTab === 'projects' && (
               <div className="mt-4 sm:mt-8">
-                <TaskManager 
-                  projectEvents={projectEvents}
-                  items={items}
-                  onAddProjectEvent={handleAddProjectEvent}
-                  onUpdateProjectEvent={handleUpdateProjectEvent}
-                  onCompleteProjectEvent={handleCompleteProjectEvent}
-                  onDeleteProjectEvent={handleDeleteProjectEvent}
-                  onResetProjectEvent={handleResetProjectEvent}
-                  onEditProjectEvent={handleEditProjectEvent}
-                  attributeNames={attributeNames}
-                />
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+                  <LazyTaskManager 
+                    projectEvents={projectEvents}
+                    items={items}
+                    onAddProjectEvent={handleAddProjectEvent}
+                    onUpdateProjectEvent={handleUpdateProjectEvent}
+                    onCompleteProjectEvent={handleCompleteProjectEvent}
+                    onDeleteProjectEvent={handleDeleteProjectEvent}
+                    onResetProjectEvent={handleResetProjectEvent}
+                    onEditProjectEvent={handleEditProjectEvent}
+                    attributeNames={attributeNames}
+                  />
+                </Suspense>
               </div>
             )}
             
             {/* Status Tab */}
             {activeTab === 'status' && (
               <div className="mt-4 sm:mt-8">
-                <StatusPanel 
-                  attributes={attributes} 
-                  achievements={achievements}
-                  selectedTitles={selectedTitles}
-                  onTitleChange={handleTitleChange}
-                />
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+                  <LazyStatusPanel 
+                    attributes={attributes} 
+                    achievements={achievements}
+                    selectedTitles={selectedTitles}
+                    onTitleChange={handleTitleChange}
+                  />
+                </Suspense>
               </div>
             )}
             
             {/* Achievements Tab */}
             {activeTab === 'achievements' && (
               <div className="mt-4 sm:mt-8">
-                <AchievementSystem 
-                  achievements={achievements}
-                  attributes={attributes}
-                  selectedTitles={selectedTitles}
-                  onTitleChange={handleTitleChange}
-                />
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+                  <LazyAchievementSystem 
+                    achievements={achievements}
+                    attributes={attributes}
+                    selectedTitles={selectedTitles}
+                    onTitleChange={handleTitleChange}
+                  />
+                </Suspense>
               </div>
             )}
             
             {/* User Settings Tab */}
             {activeTab === 'user-settings' && (
-              <UserSettings
-                userConfig={userConfig}
-                onUserConfigChange={handleUserConfigChange}
-                onBack={() => setActiveTab('dashboard')}
-              />
+              <div className="mt-4 sm:mt-8">
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+                  <LazyUserSettings
+                    userConfig={userConfig}
+                    onUserConfigChange={handleUserConfigChange}
+                    onBack={() => setActiveTab('dashboard')}
+                  />
+                </Suspense>
+              </div>
             )}
           </main>
 
@@ -939,6 +962,7 @@ function App() {
             <EventModal 
               onClose={() => setShowEventModal(false)}
               onSubmit={handleAddEvent}
+              attributeNames={attributeNames}
             />
           )}
 
@@ -948,6 +972,15 @@ function App() {
               onSubmit={handleAddCustomAchievement}
               achievements={achievements}
             />
+          )}
+
+          {showAllActivities && (
+            <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
+              <LazyAllActivitiesView 
+                events={events}
+                onClose={() => setShowAllActivities(false)}
+              />
+            </Suspense>
           )}
 
           {showUseItemModal && itemToUse && (

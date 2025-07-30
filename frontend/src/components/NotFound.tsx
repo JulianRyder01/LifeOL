@@ -38,7 +38,7 @@ function NotFound({ onReturnToDashboard }: NotFoundProps) {
         </div>
         
         <div className="mt-8 text-sm text-gray-500">
-          <p>如果您认为这是系统错误，请联系开发者。</p>
+          <p>如果您认为这是系统错误，可以联系开发者噢！微信：Jyun39</p>
         </div>
       </div>
     </div>

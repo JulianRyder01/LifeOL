@@ -1,6 +1,6 @@
 {
   "name": "lifeol-frontend",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "人生Online前端 - 将生活游戏化",
   "main": "index.js",
   "private": true,
