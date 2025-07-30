@@ -15,7 +15,7 @@ export class ProjectEventProgressLog {
   @Column()
   reason: string;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   timestamp: Date;
 
   @CreateDateColumn()
@@ -24,7 +24,10 @@ export class ProjectEventProgressLog {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // 关系定义
+  /**
+   * 与ProjectEvent的关联关系
+   * 一个ProjectEvent可以有多个进度日志
+   */
   @ManyToOne(() => ProjectEvent, projectEvent => projectEvent.progressLogs)
   @JoinColumn({ name: 'projectEventId' })
   projectEvent: ProjectEvent;

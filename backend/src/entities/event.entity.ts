@@ -30,7 +30,9 @@ export class Event {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // 关系定义
+  /**
+   * 事件与用户的关系：一个事件属于一个用户
+   */
   @ManyToOne(() => User, user => user.events)
   @JoinColumn({ name: 'userId' })
   user: User;

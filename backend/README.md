@@ -1,4 +1,201 @@
-# LifeOL 后端 API 文档
+# LifeOL 后端服务
+
+人生Online后端服务 - 云端数据存储
+
+## 简介
+
+这是 LifeOL 项目的后端服务，基于 NestJS 构建，提供 RESTful API 接口用于用户认证、数据存储等功能。
+
+## 技术栈
+
+- Node.js + NestJS
+- TypeScript
+- PostgreSQL
+- JWT 认证
+- TypeORM
+
+## 环境配置
+
+1. 复制 [.env.example](file:///d:/Desktop/Develop/LifeOL/backend/.env.example) 文件为 [.env](file:///d:/Desktop/Develop/LifeOL/backend/.env) 并配置相应参数：
+
+```env
+# 数据库配置
+DB_HOST=8.155.18.113           # PostgreSQL服务器地址
+DB_PORT=5432                   # PostgreSQL端口
+DB_USERNAME=lifeol             # 数据库用户名
+DB_PASSWORD=password           # 数据库密码
+DB_NAME=lifeol                 # 数据库名
+
+# JWT 配置
+JWT_SECRET=lifeol_jwt_secret_key  # JWT密钥
+JWT_EXPIRES_IN=3600s           # Access token过期时间
+JWT_REFRESH_EXPIRES_IN=7d      # Refresh token过期时间
+
+# 应用配置
+PORT=3001                      # 应用监听端口
+NODE_ENV=development           # 运行环境
+```
+
+2. 确保远程 PostgreSQL 服务器已正确配置并允许来自应用服务器的连接。
+
+3. 在 PostgreSQL 服务器上执行 [init-db.sql](file:///d:/Desktop/Develop/LifeOL/backend/init-db.sql) 脚本创建数据库和用户：
+
+```bash
+psql -U postgres -f init-db.sql
+```
+
+## 数据库设置
+
+确保您的 PostgreSQL 服务器已正确配置：
+
+1. 创建数据库用户和数据库（使用 [init-db.sql](file:///d:/Desktop/Develop/LifeOL/backend/init-db.sql) 脚本）
+
+2. 确保 PostgreSQL 配置文件 (postgresql.conf) 中的 `listen_addresses` 设置为 '*' 或服务器IP：
+   ```
+   listen_addresses = '*'          # 监听所有地址
+   port = 5432                     # 端口
+   ```
+
+3. 在 pg_hba.conf 文件中添加适当的访问规则：
+   ```
+   # 允许来自特定IP的MD5加密连接
+   host    lifeol    lifeol    120.235.113.236/32    md5
+   
+   # 或者允许来自任何IP的连接（仅用于测试环境，生产环境不推荐）
+   host    lifeol    lifeol    0.0.0.0/0             md5
+   ```
+   
+   根据错误信息，您的应用服务器IP是 `120.235.113.236`。
+
+4. 重启 PostgreSQL 服务使配置生效：
+   ```bash
+   # Ubuntu/Debian
+   sudo systemctl restart postgresql
+   
+   # CentOS/RHEL
+   sudo systemctl restart postgresql
+   
+   # 或者使用
+   sudo service postgresql restart
+   ```
+
+## Nginx 配置
+
+如果您使用 Nginx 作为反向代理，可以参考 [nginx.conf](file:///d:/Desktop/Develop/LifeOL/nginx.conf) 文件中的配置示例：
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;  # 替换为您的域名或服务器IP
+
+    # 代理后端API请求
+    location /api/ {
+        proxy_pass http://localhost:3001/;  # 后端服务运行端口
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 代理Swagger文档
+    location /api-docs/ {
+        proxy_pass http://localhost:3001/api-docs/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+## 安装依赖
+
+```bash
+npm install
+```
+
+## 开发环境运行
+
+```bash
+npm run start:dev
+```
+
+## 生产环境构建
+
+```bash
+npm run build
+```
+
+## 生产环境运行
+
+```bash
+npm run start:prod
+```
+
+## API 文档
+
+启动服务后，可以通过以下地址访问 Swagger API 文档：
+
+```
+http://localhost:3001/api-docs
+```
+
+## 数据库迁移
+
+TypeORM 配置为自动同步模式（仅开发环境），在生产环境中应使用迁移：
+
+```bash
+# 生成迁移
+npm run typeorm migration:generate -- -n MigrationName
+
+# 运行迁移
+npm run typeorm migration:run
+```
+
+## 故障排除
+
+### 数据库连接问题
+
+如果您遇到类似以下的错误：
+
+```
+error: no pg_hba.conf entry for host "120.235.113.236", user "lifeol", database "lifeol", no encryption
+```
+
+请确保：
+
+1. 在 `pg_hba.conf` 文件中添加了正确的访问规则
+2. PostgreSQL 服务已重启
+3. 防火墙允许 5432 端口的连接
+4. PostgreSQL 配置为监听外部连接
+
+### 检查防火墙设置
+
+确保服务器防火墙允许来自应用服务器的连接：
+
+```bash
+# Ubuntu/Debian ufw
+sudo ufw allow from 120.235.113.236 to any port 5432
+
+# 或者开放 5432 端口给所有IP（仅用于测试）
+sudo ufw allow 5432
+
+# CentOS/RHEL firewalld
+sudo firewall-cmd --permanent --add-port=5432/tcp
+sudo firewall-cmd --reload
+```
+
+### 测试数据库连接
+
+您可以使用以下命令测试数据库连接：
+
+```bash
+# 使用 psql 测试连接
+psql -h 8.155.18.113 -p 5432 -U lifeol -d lifeol
+
+# 或使用 telnet 测试端口连通性
+telnet 8.155.18.113 5432
+```
 
 ## 概述
 
@@ -14,7 +211,7 @@ LifeOL 后端 API 为前端应用提供云端数据存储服务，替代原先�
 
 ## 架构设计
 
-```mermaid
+```
 graph TD
     A[前端应用] --> B[API 网关/Nginx]
     B --> C[NestJS 应用]
@@ -51,7 +248,7 @@ JWT 认证使用以下依赖包：
 
 ### 认证流程
 
-```mermaid
+```
 sequenceDiagram
     participant C as 客户端
     participant A as 认证API
@@ -91,7 +288,7 @@ JWT token 包含三部分：
 3. **Signature**: 用于验证 token 完整性
 
 示例 payload:
-```json
+```
 {
   "sub": "用户ID",
   "username": "用户名",
@@ -1074,7 +1271,7 @@ Authorization: Bearer <access_token>
 
 ## 数据模型关系图
 
-```mermaid
+```
 erDiagram
     USER ||--o{ ATTRIBUTE : has
     USER ||--o{ EVENT : creates

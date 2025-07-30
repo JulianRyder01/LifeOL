@@ -32,7 +32,7 @@ __decorate([
     __metadata("design:type", String)
 ], ProjectEventProgressLog.prototype, "reason", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'timestamp' }),
     __metadata("design:type", Date)
 ], ProjectEventProgressLog.prototype, "timestamp", void 0);
 __decorate([
