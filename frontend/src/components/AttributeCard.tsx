@@ -68,9 +68,9 @@ function AttributeCard({ attributeKey, attribute }: AttributeCardProps) {
         
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-[var(--text-secondary)]">进度</span>
+            <span className="text-[var(--text-secondary)]">距下一级</span>
             <span className="text-[var(--text-secondary)]">
-              {attribute.exp - expForCurrentLevel} / {expForNextLevel - expForCurrentLevel}
+              {attribute.exp - expForCurrentLevel} / {expForNextLevel - expForCurrentLevel} EXP
             </span>
           </div>
           

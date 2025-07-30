@@ -119,7 +119,7 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">事件管理</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">人生时间轴</h2>
       
       {Object.keys(groupedEvents).length === 0 ? (
         <div className="text-center py-12">
