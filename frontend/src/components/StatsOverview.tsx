@@ -69,7 +69,7 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
           
           <div className="md:col-span-2">
             <h3 className="text-lg font-semibold mb-4">你的人生属性概览</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-3 gap-4">
               {Object.entries(attributes).map(([key, attr]) => {
                 const config = attributeConfig[key];
                 const expPercentage = getProgressToNextLevel(attr.exp, attr.level);
@@ -97,7 +97,7 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
                     <div className="text-xs font-medium text-[var(--text-secondary)]">
                       {config.name}
                     </div>
-                    <div className="text-xs text-[var(--text-secondary)] mt-1">
+                    <div className="text-xs text-[var(--text-secondary)] mt-1 hidden sm:block">
                       {currentExpInLevel}/{expToNext} EXP
                     </div>
                   </div>

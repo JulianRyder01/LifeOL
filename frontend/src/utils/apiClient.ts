@@ -74,9 +74,10 @@ class ApiClient {
       }
       
       return await response.json();
-    } catch (error) {
-      console.error(`API request failed: ${error.message}`);
-      throw error;
+    } catch (error: unknown) {
+      const e = error as Error;
+      console.error(`API request failed: ${e.message}`);
+      throw e;
     }
   }
 
@@ -127,10 +128,32 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  /**
+   * 导入数据
+   */
+  async importData(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return this.request<{ message: string }>('/data/import', {
+      method: 'POST',
+      body: formData,
+      headers: {}, // 让浏览器设置正确的Content-Type
+    });
+  }
 }
 
 // 创建并导出API客户端实例
-export const apiClient = new ApiClient();
+const apiClient = new ApiClient();
+
+// 创建一个公共的导入方法而不是直接调用私有方法
+export const importData = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return apiClient.importData(file);
+};
 
 // 导出认证相关的方法
 export const authApi = {
@@ -310,23 +333,13 @@ export const configApi = {
 };
 
 // 导出数据导入导出相关的方法
-export const dataApi = {
+export const dataService = {
   /**
    * 导出用户数据
    */
-  exportData: () => apiClient.get('/data/export'),
-
-  /**
-   * 导入用户数据
-   */
-  importData: (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    return apiClient.request('/data/import', {
-      method: 'POST',
-      body: formData,
-      headers: {}, // 让浏览器设置正确的Content-Type
-    });
+  exportData: () => {
+    return apiClient.get<Blob>('/data/export');
   },
 };
+
+export default apiClient;

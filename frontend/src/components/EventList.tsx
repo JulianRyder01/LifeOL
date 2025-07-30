@@ -56,7 +56,7 @@ function EventList({ events }: EventListProps) {
               <div key={event.id} className="border border-[var(--border-color)] rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-medium text-[var(--text-primary)] flex-1">{event.title}</h3>
-                  <span className="text-xs text-[var(--text-muted)] ml-2">{formatTime(event.timestamp)}</span>
+                  <span className="text-xs text-[var(--text-muted)] ml-2 whitespace-nowrap">{formatTime(event.timestamp)}</span>
                 </div>
                 
                 {event.description && (
@@ -78,7 +78,7 @@ function EventList({ events }: EventListProps) {
                         }}
                       >
                         <div className={`icon-${attributeConfig[attr].icon} text-xs`}></div>
-                        <span>+{exp}</span>
+                        <span className="text-xs">+{exp}</span>
                       </div>
                     ))}
                 </div>

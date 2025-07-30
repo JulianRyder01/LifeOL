@@ -67,7 +67,7 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
       id: event.id,
       title: event.title,
       description: event.description || '',
-      expGains: { ...event.expGains }
+      expGains: event.expGains || {}
     });
   };
 
@@ -85,20 +85,12 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
     if (editForm.id) {
       onUpdateEvent(editForm.id, {
         title: editForm.title,
-        description: editForm.description,
-        expGains: editForm.expGains
+        description: editForm.description
       });
       cancelEdit();
     }
   };
 
-  const handleExpChange = (attrKey: string, value: string) => {
-    const newExpGains = {
-      ...editForm.expGains,
-      [attrKey]: parseInt(value) || 0
-    };
-    setEditForm({...editForm, expGains: newExpGains});
-  };
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -213,29 +205,6 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
                                               rows={2}
                                             />
                                             
-                                            <div className="flex flex-wrap gap-2 mb-3">
-                                              {Object.entries(attributeConfig).map(([attrKey, config]) => {
-                                                const expValue = editForm.expGains[attrKey] || 0;
-                                                return (
-                                                  <div
-                                                    key={attrKey}
-                                                    className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
-                                                    style={{ 
-                                                      backgroundColor: `${config.color}15`,
-                                                      color: config.color 
-                                                    }}
-                                                  >
-                                                    <div className={`icon-${config.icon} text-xs`}></div>
-                                                    <input
-                                                      type="number"
-                                                      value={expValue}
-                                                      onChange={(e) => handleExpChange(attrKey, e.target.value)}
-                                                      className="w-12 text-xs border-none bg-transparent"
-                                                    />
-                                                  </div>
-                                                );
-                                              })}
-                                            </div>
                                             <div className="flex justify-end space-x-2">
                                               <button
                                                 onClick={cancelEdit}

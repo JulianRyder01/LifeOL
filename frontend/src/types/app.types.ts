@@ -23,9 +23,14 @@ export interface Event {
 
 // TODO: Add support for long-term events with progress tracking
 export interface ProjectEventProgressLog {
-  change: number;        // 进度变化值，正数表示增加，负数表示减少
-  reason: string;        // 变化原因
-  timestamp: string;     // 变化时间
+  change: number;
+  reason?: string;
+  timestamp: string;
+}
+
+export interface ProgressButtonConfig {
+  label: string;
+  value: number;
 }
 
 export interface ProjectEvent {
@@ -38,6 +43,7 @@ export interface ProjectEvent {
   createdAt: string;
   completedAt?: string;
   progressLog?: ProjectEventProgressLog[]; // 进度变更记录
+  customProgressButtons?: ProgressButtonConfig[]; // 自定义进度按钮
 }
 
 export interface Item {
