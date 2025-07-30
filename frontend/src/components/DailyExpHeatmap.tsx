@@ -64,15 +64,17 @@ const DailyExpHeatmap: React.FC<DailyExpHeatmapProps> = ({ events }) => {
     const clampedExp = Math.max(-100, Math.min(100, exp));
     
     if (clampedExp > 0) {
-      // 正向增益 - 蓝色系
+      // 正向增益 - 蓝色系 从浅蓝到艳蓝
       const intensity = Math.min(1, clampedExp / 100);
-      const blueValue = Math.floor(100 + (255 - 100) * intensity);
-      return `rgb(100, 100, ${blueValue})`;
+      const blueValue = Math.floor(200 + (255 - 200) * intensity);
+      const otherValue = Math.floor(200 * (1 - intensity));
+      return `rgb(${otherValue}, ${otherValue}, ${blueValue})`;
     } else if (clampedExp < 0) {
-      // 负向增益 - 红色系
+      // 负向增益 - 红色系 从浅红到艳红
       const intensity = Math.min(1, Math.abs(clampedExp) / 100);
-      const redValue = Math.floor(100 + (255 - 100) * intensity);
-      return `rgb(${redValue}, 100, 100)`;
+      const redValue = Math.floor(200 + (255 - 200) * intensity);
+      const otherValue = Math.floor(200 * (1 - intensity));
+      return `rgb(${redValue}, ${otherValue}, ${otherValue})`;
     } else {
       // 无变化 - 灰色
       return '#f0f0f0';
