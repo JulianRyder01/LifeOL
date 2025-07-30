@@ -1,29 +1,27 @@
-// 用户配置相关工具函数
+import { UserConfig } from '../types/app.types';
+import { APP_CONFIG } from './config';
 
-export interface UserConfig {
-  username: string;
-  avatar: string;
+// Get initial user configuration
+function getInitialUserConfig(): UserConfig {
+  return {
+    username: '冒险者',
+    avatar: '😊'
+  };
 }
 
-// 默认用户配置
-const DEFAULT_USER_CONFIG: UserConfig = {
-  username: '秋实',
-  avatar: '🍁'
-};
-
-// 保存用户配置到localStorage
-export function saveUserConfig(config: UserConfig): void {
+// Save user configuration to localStorage
+function saveUserConfig(config: UserConfig): void {
   try {
-    localStorage.setItem('lifeol_user_config', JSON.stringify(config));
+    localStorage.setItem(APP_CONFIG.STORAGE_KEYS.USER_CONFIG, JSON.stringify(config));
   } catch (error) {
     console.error('Failed to save user config:', error);
   }
 }
 
-// 从localStorage加载用户配置
-export function loadUserConfig(): UserConfig | null {
+// Load user configuration from localStorage
+function loadUserConfig(): UserConfig | null {
   try {
-    const stored = localStorage.getItem('lifeol_user_config');
+    const stored = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.USER_CONFIG);
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
     console.error('Failed to load user config:', error);
@@ -31,26 +29,25 @@ export function loadUserConfig(): UserConfig | null {
   }
 }
 
-// 获取初始用户配置
-export function getInitialUserConfig(): UserConfig {
-  return DEFAULT_USER_CONFIG;
+// Reset all user data
+function resetUserData(): void {
+  // Clear all stored data
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ATTRIBUTES);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.EVENTS);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ACHIEVEMENTS);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ITEMS);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.PROJECT_EVENTS);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.CONSUMABLE_USAGE);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SELECTED_TITLES);
+  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.USER_CONFIG);
+  
+  // Reload the page to reflect changes
+  window.location.reload();
 }
 
-// 重置所有用户数据
-export function resetUserData(): void {
-  try {
-    // 清除所有用户数据
-    localStorage.removeItem('lifeol_attributes');
-    localStorage.removeItem('lifeol_events');
-    localStorage.removeItem('lifeol_achievements');
-    localStorage.removeItem('lifeol_items');
-    localStorage.removeItem('lifeol_project_events');
-    localStorage.removeItem('lifeol_consumable_usage');
-    localStorage.removeItem('lifeol_selected_titles');
-    
-    // 重新加载页面以应用初始状态
-    window.location.reload();
-  } catch (error) {
-    console.error('Failed to reset user data:', error);
-  }
-}
+export {
+  getInitialUserConfig,
+  saveUserConfig,
+  loadUserConfig,
+  resetUserData
+};

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserConfig, saveUserConfig, resetUserData } from '../utils/userConfig';
+import { UserConfig } from '../types/app.types';
+import { saveUserConfig, resetUserData } from '../utils/userConfig';
+import { downloadUserData, importUserDataFromFile } from '../utils/dataImportExport';
 
 interface UserSettingsProps {
   userConfig: UserConfig;
@@ -12,6 +14,7 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
   const [avatar, setAvatar] = useState(userConfig.avatar);
   const [dontShowTaskCompleteConfirm, setDontShowTaskCompleteConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
 
   useEffect(() => {
     // 从localStorage加载用户设置
@@ -48,6 +51,40 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
     setShowResetConfirm(false);
   };
 
+  // Handle data export
+  const handleExportData = () => {
+    try {
+      downloadUserData();
+      setImportStatus({ type: 'success', message: '数据导出成功！' });
+      setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+    } catch (error) {
+      setImportStatus({ type: 'error', message: '数据导出失败，请重试。' });
+      setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+    }
+  };
+
+  // Handle data import
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    importUserDataFromFile(file, (success) => {
+      if (success) {
+        setImportStatus({ type: 'success', message: '数据导入成功！页面将自动刷新。' });
+        setTimeout(() => {
+          setImportStatus({ type: null, message: '' });
+          window.location.reload();
+        }, 2000);
+      } else {
+        setImportStatus({ type: 'error', message: '数据导入失败，请检查文件格式。' });
+        setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+      }
+    });
+
+    // Reset file input
+    event.target.value = '';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
@@ -62,6 +99,12 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
             </svg>
           </button>
         </div>
+
+        {importStatus.type && (
+          <div className={`mb-4 p-3 rounded ${importStatus.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {importStatus.message}
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* 用户信息设置 */}
@@ -114,6 +157,33 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
                   }`} />
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* 数据导入导出 */}
+          <div className="border-b border-gray-200 pb-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">数据管理</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <button
+                  onClick={handleExportData}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  导出数据
+                </button>
+                <label className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-offset-2 text-center cursor-pointer">
+                  导入数据
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportData}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              <p className="text-xs text-gray-500">
+                导出数据将保存您所有的属性、事件、成就、道具等信息。导入数据将替换当前所有数据，请谨慎操作。
+              </p>
             </div>
           </div>
 

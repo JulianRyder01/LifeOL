@@ -2,16 +2,24 @@
   "name": "lifeol",
   "version": "1.0.0",
   "description": "人生Online - 将生活游戏化",
+  "main": "index.js",
   "private": true,
+  "engines": {
+    "node": "^18.0.0 || ^20.0.0 || ^22.0.0",
+    "npm": "^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0"
+  },
   "workspaces": [
     "frontend",
     "backend"
   ],
   "scripts": {
-    "dev:frontend": "npm run dev --workspace=frontend",
-    "dev:backend": "npm run dev --workspace=backend",
-    "build:frontend": "npm run build --workspace=frontend",
-    "build:backend": "npm run build --workspace=backend"
+    "postinstall": "npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run start:dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build"
   },
   "keywords": [
     "life-game",
@@ -19,14 +27,6 @@
     "life-management",
     "gamification"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourname/lifeol.git"
-  },
   "author": "LifeOL Team",
-  "license": "MIT",
-  "engines": {
-    "node": "^18.0.0 || ^20.0.0",
-    "npm": "^8.0.0"
-  }
+  "license": "MIT"
 }

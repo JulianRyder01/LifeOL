@@ -1,5 +1,6 @@
 import { Attributes, Event, Achievement, DecayConfig, DecayWarning } from '../types/app.types';
 import { calculateLevel, getExpForLevel } from './calculations';
+import { APP_CONFIG } from './config';
 
 // Achievement system utilities
 
@@ -445,7 +446,7 @@ function getAvailableTitles(achievements: Achievement[], attributes: Attributes)
 // Save achievements to localStorage
 function saveAchievements(achievements: Achievement[]): void {
   try {
-    localStorage.setItem('lifeol_achievements', JSON.stringify(achievements));
+    localStorage.setItem(APP_CONFIG.STORAGE_KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
   } catch (error) {
     console.error('Failed to save achievements:', error);
   }
@@ -454,7 +455,7 @@ function saveAchievements(achievements: Achievement[]): void {
 // Load achievements from localStorage
 function loadAchievements(): Achievement[] | null {
   try {
-    const stored = localStorage.getItem('lifeol_achievements');
+    const stored = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.ACHIEVEMENTS);
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
     console.error('Failed to load achievements:', error);

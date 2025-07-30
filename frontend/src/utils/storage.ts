@@ -1,15 +1,8 @@
 import { Attributes, Event, Item, ProjectEvent } from '../types/app.types';
+import { APP_CONFIG } from './config';
 
 // Storage keys
-const STORAGE_KEYS = {
-  ATTRIBUTES: 'lifeol_attributes',
-  EVENTS: 'lifeol_events',
-  ACHIEVEMENTS: 'lifeol_achievements',
-  ITEMS: 'lifeol_items',
-  PROJECT_EVENTS: 'lifeol_project_events',
-  CONSUMABLE_USAGE: 'lifeol_consumable_usage',
-  SELECTED_TITLES: 'lifeol_selected_titles'
-};
+const STORAGE_KEYS = APP_CONFIG.STORAGE_KEYS;
 
 // Save attributes to localStorage
 function saveAttributes(attributes: Attributes): void {
