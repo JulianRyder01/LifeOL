@@ -5,9 +5,11 @@ import { getExpForLevel, getProgressToNextLevel } from '../utils/calculations';
 interface StatsOverviewProps {
   attributes: Attributes;
   achievements: Achievement[];
+  projectEvents?: any[]; // Add projectEvents to count completed tasks
+  events?: any[]; // Add events to count experiences
 }
 
-function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
+function StatsOverview({ attributes, achievements, projectEvents = [], events = [] }: StatsOverviewProps) {
   try {
     const levels = Object.values(attributes).map(attr => attr.level);
     const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
@@ -18,6 +20,14 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
     
     const totalExp = Object.values(attributes).reduce((sum, attr) => sum + attr.exp, 0);
     const unlockedAchievements = achievements.filter(a => a.unlockedAt).length;
+    
+    // Count completed tasks (projectEvents with progress >= 100 or with completedAt)
+    const completedTasks = projectEvents.filter(event => 
+      event.completedAt || event.progress >= 100
+    ).length;
+    
+    // Count experiences (simply the number of events)
+    const experienceCount = events.length;
 
     const attributeConfig: Record<string, AttributeConfig> = {
       int: { name: '智力', icon: 'book-open', color: 'var(--int-color)' },
@@ -45,9 +55,12 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
           <div className="md:col-span-1">
             <h2 className="text-xl font-semibold mb-4">总体概览</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">个人发展等级</span>
-                <span className="text-2xl font-bold text-[var(--primary-color)]">{totalLevel}</span>
+              <div className="flex items-center justify-between group relative">
+                <span className="text-[var(--text-secondary)] cursor-pointer">个人发展等级</span>
+                <span className="text-2xl font-bold text-[var(--primary-color)] cursor-pointer">{totalLevel}</span>
+                <div className="absolute left-0 mt-2 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-64 z-10 pointer-events-none">
+                  综合考量个人属性的全面发展。个人发展等级是六大属性等级的调和平均数。
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">平均等级</span>
@@ -56,6 +69,17 @@ function StatsOverview({ attributes, achievements }: StatsOverviewProps) {
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">总经验</span>
                 <span className="text-xl font-semibold">{totalExp}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[var(--text-secondary)]">已完成任务</span>
+                <span className="text-xl font-semibold">{completedTasks}</span>
+              </div>
+              <div className="flex items-center justify-between group relative">
+                <span className="text-[var(--text-secondary)] cursor-pointer">阅历</span>
+                <span className="text-xl font-semibold cursor-pointer">{experienceCount}</span>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                  记录过的事件数
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">已获成就</span>
