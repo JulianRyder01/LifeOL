@@ -6,6 +6,7 @@ interface Badge {
   title: string;
   description: string;
   icon: string;
+  condition?: string;
 }
 
 interface SevenDaySummaryBadgeProps {
@@ -69,31 +70,36 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
         id: 'life-winner',
         title: '人生赢家',
         description: '你像开了挂一样，人生正在高速升级！',
-        icon: '🏆'
+        icon: '🏆',
+        condition: `总经验值 ≥ 700 (当前: ${totalExpGain})`
       },
       {
         id: 'momentum',
         title: '势如破竹',
         description: '进步飞速，无人能挡！',
-        icon: '🚀'
+        icon: '🚀',
+        condition: `总经验值 ≥ 500 (当前: ${totalExpGain})`
       },
       {
         id: 'steady',
         title: '稳步提升',
         description: '每天一点点，进步看得见！',
-        icon: '📈'
+        icon: '📈',
+        condition: `总经验值 ≥ 200 (当前: ${totalExpGain})`
       },
       {
         id: 'persevering',
         title: '砥砺前行',
         description: '你仍在努力，保持前进的动力！',
-        icon: '💪'
+        icon: '💪',
+        condition: `总经验值 ≥ 50 (当前: ${totalExpGain})`
       },
       {
-        id: '平淡',
+        id: 'plain',
         title: '略显平淡',
         description: '最近的生活有点平静，是时候给自己加点料了！',
-        icon: '☕'
+        icon: '☕',
+        condition: `总经验值在-50到50之间 (当前: ${totalExpGain})`
       },
       
       // 属性专项类徽章
@@ -101,73 +107,85 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
         id: 'study-god',
         title: '学霸附体',
         description: '求知若渴，智商爆表！',
-        icon: '🧠'
+        icon: '🧠',
+        condition: `智力属性经验值 ≥ 150 (当前: ${attributeGains.int})`
       },
       {
         id: 'mind-active',
         title: '思维活跃',
         description: '你的大脑正在高速运转，点亮智慧火花！',
-        icon: '💡'
+        icon: '💡',
+        condition: `智力属性经验值 ≥ 80 (当前: ${attributeGains.int})`
       },
       {
         id: 'energetic',
         title: '活力满满',
         description: '精力充沛，身体是革命的本钱！',
-        icon: '🏃'
+        icon: '🏃',
+        condition: `体魄属性经验值 ≥ 300 (当前: ${attributeGains.str})`
       },
       {
         id: 'fitness',
         title: '体能达人',
         description: '坚持锻炼，健康生活每一天！',
-        icon: '💪'
+        icon: '💪',
+        condition: `体魄属性经验值 ≥ 100 (当前: ${attributeGains.str})`
       },
       {
         id: 'charged',
         title: '充电完成',
         description: '懂得休息才能更好地出发，你已充满电！',
-        icon: '🔋'
+        icon: '🔋',
+        condition: `精力属性经验值 ≥ 120 (当前: ${attributeGains.vit})`
       },
       {
         id: 'efficient',
         title: '高效模式',
         description: '精力管理有方，做事更有效率！',
-        icon: '⚡'
+        icon: '⚡',
+        condition: `精力属性经验值 ≥ 60 (当前: ${attributeGains.vit})`
       },
       {
         id: 'network',
         title: '人脉广阔',
         description: '交友达人，你的魅力无法阻挡！',
-        icon: '👥'
+        icon: '👥',
+        condition: `社交属性经验值 ≥ 150 (当前: ${attributeGains.cha})`
       },
       {
         id: 'social-active',
         title: '社交活跃',
         description: '积极互动，拓展你的社交圈！',
-        icon: '🤝'
+        icon: '🤝',
+        condition: `社交属性经验值 ≥ 80 (当前: ${attributeGains.cha})`
       },
       {
         id: 'emotion-master',
         title: '情绪大师',
         description: '洞察内心，平衡情绪，你已炉火纯青！',
-        icon: '😊'
+        icon: '😊',
+        condition: `情感属性经验值 ≥ 100 (当前: ${attributeGains.eq})`
       },
       {
         id: 'inner-growth',
         title: '内心成长',
         description: '关注自我，你的情感世界正在丰富！',
-        icon: '❤️'
+        icon: '❤️',
+        condition: `情感属性经验值 ≥ 50 (当前: ${attributeGains.eq})`
       },
       {
         id: 'inspiration',
         title: '灵感爆发',
         description: '创意无限，你的脑洞突破天际！',
-        icon: '🎨'
+        icon: '🎨',
+        condition: `创造属性经验值 ≥ 150 (当前: ${attributeGains.cre})`
       },
       {
         id: 'creator',
         title: '创想家',
         description: '动手实践，让你的奇思妙想变为现实！',
-        icon: '🔧'
+        icon: '🔧',
+        condition: `创造属性经验值 ≥ 80 (当前: ${attributeGains.cre})`
       },
       
       // 特殊成就类徽章
@@ -175,13 +193,15 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
         id: 'well-rounded',
         title: '全能战士',
         description: '你全面发展，没有短板！',
-        icon: '🏅'
+        icon: '🏅',
+        condition: '所有属性经验值 ≥ 10'
       },
       {
         id: 'breakthrough',
         title: '突破自我',
         description: '恭喜你，又一次超越了自己！',
-        icon: '🌟'
+        icon: '🌟',
+        condition: '待定义'
       }
     ];
 
@@ -198,7 +218,7 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
     } else if (totalExpGain >= 50) {
       satisfiedBadges.push(badges.find(b => b.id === 'persevering')!);
     } else if (totalExpGain >= -50 && totalExpGain <= 50) {
-      satisfiedBadges.push(badges.find(b => b.id === '平淡')!);
+      satisfiedBadges.push(badges.find(b => b.id === 'plain')!);
     }
 
     // 属性专项类徽章（找出增益最高的属性）
@@ -276,7 +296,8 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
       id: 'default',
       title: '继续努力',
       description: '每一天的努力都在为更好的自己铺路！',
-      icon: '🌱'
+      icon: '🌱',
+      condition: '继续积累经验值以解锁徽章'
     };
   }, [sevenDayStats]);
 
@@ -291,7 +312,7 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
           <div className="absolute left-0 mt-2 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-64 z-10 pointer-events-none">
             <p>{badge.description}</p>
             <div className="mt-1 text-gray-300">
-              <p>触发条件: 最近七天经验值变化</p>
+              <p>触发条件: {badge.condition || '最近七天经验值变化'}</p>
             </div>
           </div>
         </div>

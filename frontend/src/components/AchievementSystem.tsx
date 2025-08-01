@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Achievement } from '../types/app.types';
-import { Attributes, Event } from '../types/app.types';
-import SevenDaySummaryBadge from './SevenDaySummaryBadge';
+import React, { useMemo, useState } from 'react';
+import { Achievement, Event, Attributes } from '../types/app.types';
 import { calculateAchievementProgress } from '../utils/achievements';
+import SevenDaySummaryBadge from './SevenDaySummaryBadge';
 
 interface AchievementSystemProps {
   achievements: Achievement[];
@@ -10,19 +9,21 @@ interface AchievementSystemProps {
   onTitleChange: (selectedTitles: string[]) => void;
   selectedTitles: string[];
   events: Event[];
-  onAddCustomAchievement: (achievement: Partial<Achievement>) => void;
-  onAddCustomTitle: (title: Partial<Achievement>) => void;
-  onAddCustomBadge: (badge: Partial<Achievement>) => void;
+  onAddCustomAchievement: (achievement: Omit<Achievement, 'id' | 'unlockedAt' | 'isTitle'>) => void;
+  onAddCustomTitle: (title: Omit<Achievement, 'id' | 'unlockedAt'>) => void;
+  onAddCustomBadge: (badge: Omit<Achievement, 'id' | 'unlockedAt' | 'isTitle'>) => void;
 }
 
-const attributeConfig = {
-  int: { name: '智力', icon: '🧠', color: 'text-blue-500' },
-  str: { name: '体魄', icon: '💪', color: 'text-red-500' },
-  vit: { name: '精力', icon: '⚡', color: 'text-yellow-500' },
-  cha: { name: '社交', icon: '👥', color: 'text-green-500' },
-  eq: { name: '情感', icon: '❤️', color: 'text-pink-500' },
-  cre: { name: '创造', icon: '🎨', color: 'text-purple-500' }
-};
+// 定义徽章类型
+interface Badge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  condition?: string;
+  unlocked: boolean;
+  unlockDate?: Date;
+}
 
 const AchievementSystem: React.FC<AchievementSystemProps> = ({
   achievements,
@@ -62,6 +63,230 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
     useMarkdown: false
   });
 
+  // 计算最近七天的统计数据
+  const sevenDayStats = useMemo(() => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 6); // 包含今天，共7天
+
+    // 过滤最近七天的事件
+    const recentEvents = events.filter(event => {
+      const eventDate = new Date(event.timestamp);
+      return eventDate >= sevenDaysAgo && eventDate <= today;
+    });
+
+    // 计算总经验值增益
+    let totalExpGain = 0;
+    
+    // 计算各属性经验值增益
+    const attributeGains: Record<string, number> = {
+      int: 0,
+      str: 0,
+      vit: 0,
+      cha: 0,
+      eq: 0,
+      cre: 0
+    };
+
+    // 遍历事件计算经验值
+    recentEvents.forEach(event => {
+      if (event.expGains) {
+        Object.entries(event.expGains).forEach(([attr, exp]) => {
+          if (attributeGains.hasOwnProperty(attr)) {
+            attributeGains[attr] += exp as number;
+          }
+          totalExpGain += exp as number;
+        });
+      }
+    });
+
+    return {
+      totalExpGain,
+      attributeGains,
+      eventCount: recentEvents.length
+    };
+  }, [events]);
+
+  // 获取所有可能的徽章
+  const allBadges = useMemo(() => {
+    const { totalExpGain, attributeGains } = sevenDayStats;
+    
+    // 徽章列表（按优先级排序）
+    const badges: Badge[] = [
+      // 总经验值类徽章
+      {
+        id: 'life-winner',
+        title: '人生赢家',
+        description: '你像开了挂一样，人生正在高速升级！',
+        icon: '🏆',
+        condition: `总经验值 ≥ 700 (当前: ${totalExpGain})`,
+        unlocked: totalExpGain >= 700
+      },
+      {
+        id: 'momentum',
+        title: '势如破竹',
+        description: '进步飞速，无人能挡！',
+        icon: '🚀',
+        condition: `总经验值 ≥ 500 (当前: ${totalExpGain})`,
+        unlocked: totalExpGain >= 500
+      },
+      {
+        id: 'steady',
+        title: '稳步提升',
+        description: '每天一点点，进步看得见！',
+        icon: '📈',
+        condition: `总经验值 ≥ 200 (当前: ${totalExpGain})`,
+        unlocked: totalExpGain >= 200
+      },
+      {
+        id: 'persevering',
+        title: '砥砺前行',
+        description: '你仍在努力，保持前进的动力！',
+        icon: '💪',
+        condition: `总经验值 ≥ 50 (当前: ${totalExpGain})`,
+        unlocked: totalExpGain >= 50
+      },
+      {
+        id: '平淡',
+        title: '略显平淡',
+        description: '最近的生活有点平静，是时候给自己加点料了！',
+        icon: '☕',
+        condition: `总经验值在-50到50之间 (当前: ${totalExpGain})`,
+        unlocked: totalExpGain >= -50 && totalExpGain <= 50
+      },
+      
+      // 属性专项类徽章
+      {
+        id: 'study-god',
+        title: '学霸附体',
+        description: '求知若渴，智商爆表！',
+        icon: '🧠',
+        condition: `智力属性经验值 ≥ 150 (当前: ${attributeGains.int})`,
+        unlocked: attributeGains.int >= 150
+      },
+      {
+        id: 'mind-active',
+        title: '思维活跃',
+        description: '你的大脑正在高速运转，点亮智慧火花！',
+        icon: '💡',
+        condition: `智力属性经验值 ≥ 80 (当前: ${attributeGains.int})`,
+        unlocked: attributeGains.int >= 80
+      },
+      {
+        id: 'energetic',
+        title: '活力满满',
+        description: '精力充沛，身体是革命的本钱！',
+        icon: '🏃',
+        condition: `体魄属性经验值 ≥ 300 (当前: ${attributeGains.str})`,
+        unlocked: attributeGains.str >= 300
+      },
+      {
+        id: 'fitness',
+        title: '体能达人',
+        description: '坚持锻炼，健康生活每一天！',
+        icon: '💪',
+        condition: `体魄属性经验值 ≥ 100 (当前: ${attributeGains.str})`,
+        unlocked: attributeGains.str >= 100
+      },
+      {
+        id: 'charged',
+        title: '充电完成',
+        description: '懂得休息才能更好地出发，你已充满电！',
+        icon: '🔋',
+        condition: `精力属性经验值 ≥ 120 (当前: ${attributeGains.vit})`,
+        unlocked: attributeGains.vit >= 120
+      },
+      {
+        id: 'efficient',
+        title: '高效模式',
+        description: '精力管理有方，做事更有效率！',
+        icon: '⚡',
+        condition: `精力属性经验值 ≥ 60 (当前: ${attributeGains.vit})`,
+        unlocked: attributeGains.vit >= 60
+      },
+      {
+        id: 'network',
+        title: '人脉广阔',
+        description: '交友达人，你的魅力无法阻挡！',
+        icon: '👥',
+        condition: `社交属性经验值 ≥ 150 (当前: ${attributeGains.cha})`,
+        unlocked: attributeGains.cha >= 150
+      },
+      {
+        id: 'social-active',
+        title: '社交活跃',
+        description: '积极互动，拓展你的社交圈！',
+        icon: '🤝',
+        condition: `社交属性经验值 ≥ 80 (当前: ${attributeGains.cha})`,
+        unlocked: attributeGains.cha >= 80
+      },
+      {
+        id: 'emotion-master',
+        title: '情绪大师',
+        description: '洞察内心，平衡情绪，你已炉火纯青！',
+        icon: '😊',
+        condition: `情感属性经验值 ≥ 100 (当前: ${attributeGains.eq})`,
+        unlocked: attributeGains.eq >= 100
+      },
+      {
+        id: 'inner-growth',
+        title: '内心成长',
+        description: '关注自我，你的情感世界正在丰富！',
+        icon: '❤️',
+        condition: `情感属性经验值 ≥ 50 (当前: ${attributeGains.eq})`,
+        unlocked: attributeGains.eq >= 50
+      },
+      {
+        id: 'inspiration',
+        title: '灵感爆发',
+        description: '创意无限，你的脑洞突破天际！',
+        icon: '🎨',
+        condition: `创造属性经验值 ≥ 150 (当前: ${attributeGains.cre})`,
+        unlocked: attributeGains.cre >= 150
+      },
+      {
+        id: 'creator',
+        title: '创想家',
+        description: '动手实践，让你的奇思妙想变为现实！',
+        icon: '🔧',
+        condition: `创造属性经验值 ≥ 80 (当前: ${attributeGains.cre})`,
+        unlocked: attributeGains.cre >= 80
+      },
+      
+      // 特殊成就类徽章
+      {
+        id: 'well-rounded',
+        title: '全能战士',
+        description: '你全面发展，没有短板！',
+        icon: '🏅',
+        condition: '所有属性经验值 ≥ 10',
+        unlocked: Object.values(attributeGains).every(gain => gain >= 10)
+      },
+      {
+        id: 'breakthrough',
+        title: '突破自我',
+        description: '恭喜你，又一次超越了自己！',
+        icon: '🌟',
+        condition: '待定义',
+        unlocked: false // 需要定义具体条件
+      }
+    ];
+
+    return badges;
+  }, [sevenDayStats]);
+
+  // 根据当前标签筛选徽章
+  const filteredBadges = useMemo(() => {
+    switch (activeTab) {
+      case 'unlocked':
+        return allBadges.filter(badge => badge.unlocked);
+      case 'locked':
+        return allBadges.filter(badge => !badge.unlocked);
+      default:
+        return allBadges;
+    }
+  }, [allBadges, activeTab]);
+
   // Filter achievements based on active tab and category
   const filteredItems = useMemo(() => {
     let items = achievements;
@@ -95,7 +320,8 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
   const achievementTotalCount = achievements.filter(a => !a.isTitle).length;
   const titleUnlockedCount = achievements.filter(a => a.isTitle && a.unlockedAt).length;
   const titleTotalCount = achievements.filter(a => a.isTitle).length;
-  const badgeCount = 7; // Fixed count for badges
+  const badgeUnlockedCount = allBadges.filter(b => b.unlocked).length;
+  const badgeTotalCount = allBadges.length;
 
   // Handle title selection
   const handleTitleSelect = (titleId: string) => {
@@ -292,11 +518,11 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
         </div>
         <div className="bg-green-50 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-green-600">
-            0%
+            {badgeTotalCount > 0 ? Math.round((badgeUnlockedCount / badgeTotalCount) * 100) : 0}%
           </div>
           <div className="text-sm text-gray-600">徽章解锁程度</div>
           <div className="text-xs text-gray-500 mt-1">
-            0已解锁 / {badgeCount}未解锁
+            {badgeUnlockedCount}已解锁 / {badgeTotalCount - badgeUnlockedCount}未解锁
           </div>
         </div>
       </div>
@@ -392,22 +618,124 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
         </div>
       )}
 
+      {/* Sub-tabs for badges */}
+      {activeCategory === 'badge' && (
+        <div className="flex border-b border-gray-200 mb-6">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`py-2 px-4 text-sm font-medium ${
+              activeTab === 'all'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            全部
+          </button>
+          <button
+            onClick={() => setActiveTab('unlocked')}
+            className={`py-2 px-4 text-sm font-medium ${
+              activeTab === 'unlocked'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            已解锁
+          </button>
+          <button
+            onClick={() => setActiveTab('locked')}
+            className={`py-2 px-4 text-sm font-medium ${
+              activeTab === 'locked'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            未解锁
+          </button>
+          <button
+            onClick={() => setShowAddBadgeForm(true)}
+            className="ml-auto py-2 px-4 text-sm font-medium text-blue-600 hover:text-blue-800"
+          >
+            + 添加自定义徽章
+          </button>
+        </div>
+      )}
+
       {/* Badges Tab Content */}
       {activeCategory === 'badge' ? (
         <div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold">七日总结徽章</h3>
-            <button
-              onClick={() => setShowAddBadgeForm(true)}
-              className="py-2 px-4 text-sm font-medium text-blue-600 hover:text-blue-800"
-            >
-              + 添加自定义徽章
-            </button>
+            <p className="text-sm text-gray-500 mt-1">
+              徽章根据您最近七天的表现自动生成，每天更新。
+            </p>
           </div>
-          <SevenDaySummaryBadge events={events} attributes={attributes} />
-          <div className="mt-4 text-sm text-gray-500">
-            <p>徽章根据您最近七天的表现自动生成，每天更新。</p>
-          </div>
+          
+          {filteredBadges.length === 0 ? (
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {activeTab === 'unlocked' ? '暂无已解锁徽章' : activeTab === 'locked' ? '暂无未解锁徽章' : '暂无徽章'}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {activeTab === 'unlocked' 
+                  ? '继续努力，解锁更多徽章' 
+                  : activeTab === 'locked' 
+                    ? '继续保持，争取解锁更多徽章' 
+                    : '根据您的活动表现，暂无匹配的徽章'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredBadges.map(badge => (
+                <div 
+                  key={badge.id} 
+                  className={`border rounded-lg p-4 ${
+                    badge.unlocked 
+                      ? 'bg-white border-gray-200' 
+                      : 'bg-gray-50 border-gray-100'
+                  }`}
+                >
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+                      badge.unlocked 
+                        ? 'bg-yellow-100 text-yellow-600' 
+                        : 'bg-gray-200 text-gray-400'
+                    }`}>
+                      <div className="text-xl">{badge.icon}</div>
+                    </div>
+
+                    <div className="ml-4 flex-1">
+                      <div className="flex justify-between">
+                        <h3 className={`font-medium ${
+                          badge.unlocked ? 'text-gray-900' : 'text-gray-500'
+                        }`}>
+                          {badge.title}
+                        </h3>
+                      </div>
+
+                      <div className={`mt-1 text-sm ${
+                        badge.unlocked ? 'text-gray-500' : 'text-gray-400'
+                      }`}>
+                        {badge.description}
+                      </div>
+
+                      <div className="mt-2 text-xs text-gray-500">
+                        触发条件: {badge.condition}
+                      </div>
+
+                      {badge.unlocked && (
+                        <div className="mt-2 text-xs text-green-600 font-medium">
+                          已解锁
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="text-center py-12">
@@ -641,12 +969,14 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
                     {newAchievement.triggerType === 'level' ? (
                       <div className="grid grid-cols-2 gap-2">
                         <select
-                          value={String(newTitle.attributeRequirement)}
+                          value={String(newAchievement.triggerCondition.split(':')[0] || 'int')}
                           onChange={(e) => setNewAchievement({...newAchievement, triggerCondition: e.target.value + ':' + (newAchievement.triggerCondition.split(':')[1] || '5')})}
                           className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
-                          {Object.entries(attributeConfig).map(([key, config]) => (
-                            <option key={key} value={key}>{config.name}</option>
+                          {['int', 'str', 'vit', 'cha', 'eq', 'cre'].map((attr) => (
+                            <option key={attr} value={attr}>
+                              {{int: '智力', str: '体魄', vit: '精力', cha: '社交', eq: '情感', cre: '创造'}[attr]}
+                            </option>
                           ))}
                         </select>
                         <input
@@ -755,12 +1085,14 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">属性要求</label>
                   <div className="grid grid-cols-2 gap-2">
                     <select
-                      value={String(newAchievement.triggerCondition.split(':')[0] || 'int')}
+                      value={String(newTitle.attributeRequirement)}
                       onChange={(e) => setNewTitle({...newTitle, attributeRequirement: e.target.value as keyof Attributes})}
                       className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
-                      {Object.entries(attributeConfig).map(([key, config]) => (
-                        <option key={key} value={key}>{config.name}</option>
+                      {['int', 'str', 'vit', 'cha', 'eq', 'cre'].map((attr) => (
+                        <option key={attr} value={attr}>
+                          {{int: '智力', str: '体魄', vit: '精力', cha: '社交', eq: '情感', cre: '创造'}[attr]}
+                        </option>
                       ))}
                     </select>
                     <input
