@@ -1,8 +1,8 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./index.html",
-    "./lifeol/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}", 
   ],
   theme: {
     extend: {
@@ -20,21 +20,25 @@ module.exports = {
         'eq-color': '#8b5cf6',
         'cre-color': '#f97316',
         
-        // UI colors
-        'bg-primary': '#ffffff',
-        'bg-secondary': '#f8fafc',
-        'bg-tertiary': '#f1f5f9',
-        'text-primary': '#1e293b',
-        'text-secondary': '#64748b',
+        // Status colors
+        'hp-color': '#ef4444',
+        'mp-color': '#0ea5e9',
+        'exp-color': '#10b981',
+        
+        // Background colors
+        'bg-dark': '#0f172a',
+        'bg-card': '#1e293b',
+        'bg-progress': '#334155',
+        
+        // Text colors
+        'text-primary': '#f1f5f9',
+        'text-secondary': '#cbd5e1',
         'text-muted': '#94a3b8',
-        'border-color': '#e2e8f0',
       },
-      borderRadius: {
-        'sm': '6px',
-        'md': '8px',
-        'lg': '12px',
+      fontFamily: {
+        'sans': ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
       }
-    },
+    }
   },
   plugins: [],
 }

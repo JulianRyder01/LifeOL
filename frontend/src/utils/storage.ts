@@ -165,6 +165,56 @@ function loadConsumableUsage(): ConsumableUsage | null {
   }
 }
 
+// Achievement related functions
+function saveAchievements(achievements: any[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
+  } catch (error) {
+    console.error('Failed to save achievements:', error);
+  }
+}
+
+function loadAchievements(): any[] | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to load achievements:', error);
+    return null;
+  }
+}
+
+function getInitialAchievements(): any[] {
+  // Return empty array for now, can be populated with initial achievements later
+  return [];
+}
+
+// User config related functions
+function saveUserConfig(userConfig: any): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.USER_CONFIG, JSON.stringify(userConfig));
+  } catch (error) {
+    console.error('Failed to save user config:', error);
+  }
+}
+
+function loadUserConfig(): any | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.USER_CONFIG);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to load user config:', error);
+    return null;
+  }
+}
+
+function getInitialUserConfig(): any {
+  return {
+    username: 'User',
+    avatar: '👤'
+  };
+}
+
 export {
   saveAttributes,
   loadAttributes,
@@ -178,5 +228,11 @@ export {
   loadProjectEvents,
   getInitialProjectEvents,
   saveConsumableUsage,
-  loadConsumableUsage
+  loadConsumableUsage,
+  saveAchievements,
+  loadAchievements,
+  getInitialAchievements,
+  saveUserConfig,
+  loadUserConfig,
+  getInitialUserConfig
 };

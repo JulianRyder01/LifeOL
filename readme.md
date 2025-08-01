@@ -16,7 +16,6 @@
     - [✨ 核心功能 (Core Features)](#-核心功能-core-features)
     - [🎨 设计理念 (Design Philosophy)](#-设计理念-design-philosophy)
     - [💻 技术栈 (Tech Stack)](#-技术栈-tech-stack)
-    - [🏗️ 项目架构 (Project Architecture)](#️-项目架构-project-architecture)
     - [🚀 路线图 (Roadmap)](#-路线图-roadmap)
     - [🤝 如何贡献 (How to Contribute)](#-如何贡献-how-to-contribute)
     - [📝 许可证 (License)](#-许可证-license)
@@ -69,66 +68,6 @@
 -   **云服务 (Cloud)**: AWS / GCP / Azure
 -   **AI**: 初期采用**规则与模板**，中期逐步演进至**微调后的大语言模型 (LLM)**。
 
-### 🏗️ 项目架构 (Project Architecture)
-
-#### 前端架构
-
-前端采用现代化的 React 架构，遵循以下最佳实践：
-
-1. **组件化设计**：
-   - 每个功能模块拆分为独立的 React 组件
-   - 组件遵循单一职责原则
-   - 使用 TypeScript 确保类型安全
-
-2. **状态管理**：
-   - 使用自定义 Hooks 封装业务逻辑 (`useApp`)
-   - 使用 Context API 避免 props drilling
-   - 本地状态使用 localStorage 持久化
-
-3. **代码组织**：
-   - 逻辑与 UI 分离
-   - 工具函数与组件分离
-   - 类型定义集中管理
-
-4. **开发体验**：
-   - Vite 提供快速的开发服务器
-   - Tailwind CSS 实现一致的样式系统
-   - TypeScript 提供完整的类型检查
-
-#### 后端架构
-
-后端采用 NestJS 框架，具有以下特点：
-
-1. **模块化设计**：
-   - 每个功能领域独立为模块
-   - 清晰的依赖注入系统
-   - 可扩展的架构
-
-2. **数据访问**：
-   - TypeORM 作为 ORM 工具
-   - PostgreSQL 作为主数据库
-   - 数据库迁移支持
-
-3. **认证与授权**：
-   - JWT 基的认证系统
-   - Passport.js 集成
-   - 角色基础的访问控制
-
-#### 数据流
-
-```mermaid
-graph TD
-    A[用户界面] --> B[React 组件]
-    B --> C[自定义 Hooks]
-    C --> D[Context API]
-    D --> E[LocalStorage]
-    E --> F[后端 API]
-    F --> G[NestJS 控制器]
-    G --> H[服务层]
-    H --> I[TypeORM]
-    I --> J[PostgreSQL]
-```
-
 ### 🚀 路线图 (Roadmap)
 
 项目目前处于 **规划阶段**。我们将分阶段进行开发：
@@ -159,8 +98,6 @@ graph TD
 5.  创建一个新的 **Pull Request**。
 
 请确保您的代码遵循现有代码风格，并提供充分的测试。
-
-详细开发文档请参考 [前端开发文档](./frontend/README.md) 和 [后端开发文档](./backend/README.md)。
 
 ### 📝 许可证 (License)
 

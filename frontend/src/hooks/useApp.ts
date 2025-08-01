@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Attributes, Event, Achievement, Item, ProjectEvent, UserConfig } from '../types/app.types';
 import { 
   saveAttributes, 
@@ -22,8 +22,19 @@ import {
   checkAttributeDecay 
 } from '../utils/achievements';
 import { saveUserConfig, loadUserConfig, getInitialUserConfig } from '../utils/userConfig';
+import { toast } from 'react-toastify';
 
 export const useApp = () => {
+  // Attribute names mapping
+  const attributeNames: Record<string, string> = {
+    'int': '智力',
+    'str': '体魄',
+    'vit': '精力',
+    'cha': '社交',
+    'eq': '情感',
+    'cre': '创造'
+  };
+
   const [attributes, setAttributes] = useState<Attributes>(() => {
     return loadAttributes() || getInitialAttributes();
   });
@@ -70,6 +81,51 @@ export const useApp = () => {
   const [itemToUse, setItemToUse] = useState<Item | null>(null);
   const [showAllActivities, setShowAllActivities] = useState(false);
 
+  // Memoize expensive calculations
+  const recentActivities = useMemo(() => {
+    // Get regular events
+    const regularEvents = [...events];
+    
+    // Get task completion events
+    const taskEvents = projectEvents
+      .filter(task => task.progress >= 100)
+      .map(task => ({
+        id: `task-${task.id}`,
+        title: `完成任务: ${task.title}`,
+        description: `成功完成了任务"${task.title}"`,
+        timestamp: task.createdAt,
+        expGains: {} as Record<string, number>
+      }));
+    
+    // Get achievement unlock events
+    const achievementEvents = achievements
+      .filter(ach => ach.unlockedAt)
+      .map(ach => ({
+        id: `ach-${ach.id}`,
+        title: `解锁成就: ${ach.title}`,
+        description: ach.description || '',
+        timestamp: ach.unlockedAt || new Date().toISOString(),
+        expGains: {} as Record<string, number>
+      }));
+    
+    // Get item acquisition events
+    const itemEvents = items
+      .filter(item => !item.used)
+      .map(item => ({
+        id: `item-${item.id}`,
+        title: `获得道具: ${item.name}`,
+        description: item.description || '',
+        timestamp: item.createdAt,
+        expGains: {} as Record<string, number>
+      }));
+    
+    // Combine all events and sort by timestamp
+    const allEvents = [...regularEvents, ...taskEvents, ...achievementEvents, ...itemEvents];
+    return allEvents.sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [events, projectEvents, achievements, items]);
+
   useEffect(() => {
     saveAttributes(attributes);
   }, [attributes]);
@@ -104,16 +160,27 @@ export const useApp = () => {
       const { updatedAttributes, warnings } = checkAttributeDecay(attributes, events);
       if (warnings.length > 0) {
         setAttributes(updatedAttributes);
-        // Could show decay notifications here
+        // Add decay event to activities log
+        const decayEvent: Event = {
+          id: `decay-${Date.now()}`,
+          title: '属性衰减',
+          description: `由于长期未使用，部分属性经验值已衰减`,
+          expGains: {},
+          timestamp: new Date().toISOString()
+        };
+        
         warnings.forEach((warning: any) => {
-          console.log(`属性衰减: ${warning.attribute} 减少了 ${warning.decayAmount} 经验值`);
+          decayEvent.expGains[warning.attribute] = -warning.decayAmount;
+          toast.warn(`您的${attributeNames[warning.attribute]}属性因长期未使用，已衰减${warning.decayAmount}点经验值`);
         });
+        
+        setEvents(prev => [decayEvent, ...prev]);
       }
     };
 
     checkDecay();
-    // Check decay every hour
-    const interval = setInterval(checkDecay, 60 * 60 * 1000);
+    // Check decay every 30 minutes instead of every hour to reduce frequency
+    const interval = setInterval(checkDecay, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, [attributes, events]);
 
@@ -131,7 +198,7 @@ export const useApp = () => {
     }
   }, [events.length]);
 
-  const handleAddEvent = (eventData: { title: string; description: string; expGains: Record<string, number> }) => {
+  const handleAddEvent = useCallback((eventData: { title: string; description: string; expGains: Record<string, number> }) => {
     const newEvent: Event = {
       id: Date.now().toString(),
       ...eventData,
@@ -142,8 +209,11 @@ export const useApp = () => {
     
     // Update attributes with gained EXP
     const updatedAttributes = { ...attributes };
+    let hasAttributeChanges = false;
+    
     Object.entries(eventData.expGains).forEach(([attr, exp]) => {
-      if (exp > 0) {
+      if (exp > 0 && attr in updatedAttributes) {
+        hasAttributeChanges = true;
         updatedAttributes[attr as keyof Attributes] = {
           ...updatedAttributes[attr as keyof Attributes],
           exp: updatedAttributes[attr as keyof Attributes].exp + exp,
@@ -151,13 +221,19 @@ export const useApp = () => {
         };
       }
     });
-    setAttributes(updatedAttributes);
     
-    // Check for new achievements
-    const newAchievements = checkAchievements(updatedAttributes, [newEvent, ...events], achievements);
-    if (newAchievements.length > 0) {
-      setAchievements(prev => [...prev, ...newAchievements]);
+    if (hasAttributeChanges) {
+      setAttributes(updatedAttributes);
+      
+      // Check for new achievements
+      const newAchievements = checkAchievements(updatedAttributes, [newEvent, ...events], achievements);
+      if (newAchievements.length > 0) {
+        setAchievements(prev => [...prev, ...newAchievements]);
+      }
     }
+    
+    // Show success notification
+    toast.success('事件记录成功！');
     
     setShowEventModal(false);
     
@@ -166,15 +242,15 @@ export const useApp = () => {
       setShowFirstTimeGuide(false);
       localStorage.setItem('lifeol_first_time_guide_shown', 'true');
     }
-  };
+  }, [attributes, events, achievements, showFirstTimeGuide]);
 
   // Delete an event
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = useCallback((id: string) => {
     setEvents(prev => prev.filter(event => event.id !== id));
-  };
+  }, []);
 
   // Update an event
-  const handleUpdateEvent = (id: string, updatedEvent: Partial<Event>) => {
+  const handleUpdateEvent = useCallback((id: string, updatedEvent: Partial<Event>) => {
     setEvents(prev => 
       prev.map(event => 
         event.id === id 
@@ -182,10 +258,10 @@ export const useApp = () => {
           : event
       )
     );
-  };
+  }, []);
 
   // Add a new item to the inventory
-  const handleAddItem = (itemData: Omit<Item, 'id' | 'createdAt'>) => {
+  const handleAddItem = useCallback((itemData: Omit<Item, 'id' | 'createdAt'>) => {
     const newItem: Item = {
       id: Date.now().toString(),
       ...itemData,
@@ -193,10 +269,10 @@ export const useApp = () => {
     };
     
     setItems(prev => [...prev, newItem]);
-  };
+  }, []);
 
   // Use a consumable item
-  const handleUseItem = (item: Item) => {
+  const handleUseItem = useCallback((item: Item) => {
     // Mark item as used with timestamp
     const updatedItems = items.map(i => 
       i.id === item.id ? { ...i, used: true, usedAt: new Date().toISOString() } : i
@@ -242,19 +318,24 @@ export const useApp = () => {
       description: item.description || `使用了 ${item.name}`,
       timestamp: new Date().toISOString(),
       expGains: item.effects?.reduce((acc, effect) => {
-        acc[effect.attribute] = effect.type === 'fixed' 
-          ? effect.value 
-          : Math.floor(attributes[effect.attribute].exp * (effect.value / 100));
+        if (effect.attribute in attributes) {
+          acc[effect.attribute] = effect.type === 'fixed' 
+            ? effect.value 
+            : Math.floor(attributes[effect.attribute].exp * (effect.value / 100));
+        }
         return acc;
       }, {} as Record<string, number>) || {},
       relatedItemId: item.id
     };
     
     setEvents(prev => [useEvent, ...prev]);
-  };
+    
+    // Show success notification
+    toast.success(`道具"${item.name}"使用成功！`);
+  }, [attributes, events, achievements]);
 
   // Confirm using a consumable item
-  const confirmUseItem = () => {
+  const confirmUseItem = useCallback(() => {
     if (!itemToUse) return;
     
     // Mark item as used
@@ -312,10 +393,10 @@ export const useApp = () => {
     
     setShowUseItemModal(false);
     setItemToUse(null);
-  };
+  }, [itemToUse, items, attributes, events, achievements]);
 
   // Undo using an item
-  const undoUseItem = (itemId: string) => {
+  const undoUseItem = useCallback((itemId: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item || !item.used) return;
     
@@ -325,7 +406,7 @@ export const useApp = () => {
     const hoursDiff = Math.abs(now.getTime() - usedTime.getTime()) / (1000 * 60 * 60);
     
     if (hoursDiff > 2) {
-      alert('超过两小时，无法撤销使用');
+      toast.error('超过两小时，无法撤销使用');
       return;
     }
     
@@ -367,10 +448,10 @@ export const useApp = () => {
       item.id === itemId ? { ...item, used: false } : item
     );
     setItems(updatedItems);
-  };
+  }, [attributes, events, items]);
 
   // Handle item updates
-  const handleUpdateItem = (id: string, updates: Partial<Omit<Item, 'id' | 'createdAt' | 'used'>>) => {
+  const handleUpdateItem = useCallback((id: string, updates: Partial<Omit<Item, 'id' | 'createdAt' | 'used'>>) => {
     setItems(prev => 
       prev.map(item => 
         item.id === id 
@@ -378,15 +459,15 @@ export const useApp = () => {
           : item
       )
     );
-  };
+  }, []);
 
   // Handle title change
-  const handleTitleChange = (titleIds: string[]) => {
+  const handleTitleChange = useCallback((titleIds: string[]) => {
     setSelectedTitles(titleIds);
-  };
+  }, []);
 
   // Add a new project event (task)
-  const handleAddProjectEvent = (projectEventData: Omit<ProjectEvent, 'id' | 'createdAt'>) => {
+  const handleAddProjectEvent = useCallback((projectEventData: Omit<ProjectEvent, 'id' | 'createdAt'>) => {
     const newProjectEvent: ProjectEvent = {
       id: Date.now().toString(),
       ...projectEventData,
@@ -394,10 +475,10 @@ export const useApp = () => {
     };
     
     setProjectEvents(prev => [...prev, newProjectEvent]);
-  };
+  }, []);
 
   // Edit a project event
-  const handleEditProjectEvent = (id: string, updates: Partial<ProjectEvent>) => {
+  const handleEditProjectEvent = useCallback((id: string, updates: Partial<ProjectEvent>) => {
     setProjectEvents(prev => 
       prev.map(event => 
         event.id === id 
@@ -405,10 +486,10 @@ export const useApp = () => {
           : event
       )
     );
-  };
+  }, []);
 
   // Handle project event updates
-  const handleUpdateProjectEvent = (id: string, progress: number, reason?: string) => {
+  const handleUpdateProjectEvent = useCallback((id: string, progress: number, reason?: string) => {
     setProjectEvents(prev => 
       prev.map(event => {
         // 只有当事件存在且进度发生变化时才记录日志
@@ -431,10 +512,10 @@ export const useApp = () => {
         return event;
       })
     );
-  };
+  }, []);
 
   // Complete a project event and award rewards
-  const handleCompleteProjectEvent = (id: string) => {
+  const handleCompleteProjectEvent = useCallback((id: string) => {
     const projectEvent = projectEvents.find(event => event.id === id);
     if (!projectEvent || projectEvent.completedAt) return;
     
@@ -476,13 +557,12 @@ export const useApp = () => {
       }
     }
     
-    // TODO: Award item rewards
-    // For now, we'll just show a notification
-    console.log(`Project "${projectEvent.title}" completed! Rewards awarded.`);
-  };
+    // Show success notification
+    toast.success(`项目"${projectEvent.title}"已完成，奖励已发放！`);
+  }, [attributes, events, achievements, projectEvents]);
 
   // Reset a completed project event to ongoing status
-  const handleResetProjectEvent = (id: string) => {
+  const handleResetProjectEvent = useCallback((id: string) => {
     setProjectEvents(prev => 
       prev.map(event => 
         event.id === id 
@@ -494,60 +574,20 @@ export const useApp = () => {
         : event
       )
     );
-  };
+  }, []);
 
   // Delete a project event
-  const handleDeleteProjectEvent = (id: string) => {
+  const handleDeleteProjectEvent = useCallback((id: string) => {
     setProjectEvents(prev => prev.filter(event => event.id !== id));
-  };
+  }, []);
 
   // Filter events to show in "Recent Activities"
-  const getRecentActivities = () => {
-    // Get regular events
-    const regularEvents = [...events];
-    
-    // Get task completion events
-    const taskEvents = projectEvents
-      .filter(task => task.progress >= 100)
-      .map(task => ({
-        id: `task-${task.id}`,
-        title: `完成任务: ${task.title}`,
-        description: `成功完成了任务"${task.title}"`,
-        timestamp: task.createdAt,
-        expGains: {} as Record<string, number>
-      }));
-    
-    // Get achievement unlock events
-    const achievementEvents = achievements
-      .filter(ach => ach.unlockedAt)
-      .map(ach => ({
-        id: `ach-${ach.id}`,
-        title: `解锁成就: ${ach.title}`,
-        description: ach.description || '',
-        timestamp: ach.unlockedAt || new Date().toISOString(),
-        expGains: {} as Record<string, number>
-      }));
-    
-    // Get item acquisition events
-    const itemEvents = items
-      .filter(item => !item.used)
-      .map(item => ({
-        id: `item-${item.id}`,
-        title: `获得道具: ${item.name}`,
-        description: item.description || '',
-        timestamp: item.createdAt,
-        expGains: {} as Record<string, number>
-      }));
-    
-    // Combine all events and sort by timestamp
-    const allEvents = [...regularEvents, ...taskEvents, ...achievementEvents, ...itemEvents];
-    return allEvents.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-  };
+  const getRecentActivities = useCallback(() => {
+    return recentActivities;
+  }, [recentActivities]);
 
   // Format time for recent activities
-  const formatActivityTime = (timestamp: string) => {
+  const formatActivityTime = useCallback((timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -560,9 +600,9 @@ export const useApp = () => {
     if (diffHours < 24) return `${diffHours}小时前`;
     if (diffDays < 7) return `${diffDays}天前`;
     return `${date.toLocaleDateString('zh-CN')} ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
-  };
+  }, []);
 
-  const handleAddCustomAchievement = (achievementData: Partial<Achievement>) => {
+  const handleAddCustomAchievement = useCallback((achievementData: Partial<Achievement>) => {
     const newAchievement: Achievement = {
       id: Date.now().toString(),
       title: achievementData.title || '自定义成就',
@@ -582,9 +622,9 @@ export const useApp = () => {
     
     setAchievements(prev => [...prev, newAchievement]);
     setShowAchievementModal(false);
-  };
+  }, []);
 
-  const handleAddCustomTitle = (titleData: Partial<Achievement>) => {
+  const handleAddCustomTitle = useCallback((titleData: Partial<Achievement>) => {
     const newTitle: Achievement = {
       id: Date.now().toString(),
       title: titleData.title || '自定义称号',
@@ -603,9 +643,9 @@ export const useApp = () => {
     };
     
     setAchievements(prev => [...prev, newTitle]);
-  };
+  }, []);
 
-  const handleAddCustomBadge = (badgeData: Partial<Achievement>) => {
+  const handleAddCustomBadge = useCallback((badgeData: Partial<Achievement>) => {
     const newBadge: Achievement = {
       id: Date.now().toString(),
       title: badgeData.title || '自定义徽章',
@@ -624,10 +664,10 @@ export const useApp = () => {
     };
     
     setAchievements(prev => [...prev, newBadge]);
-  };
+  }, []);
 
   // Helper function to create custom achievement conditions
-  const createCustomCondition = (triggerType: string, condition: string) => {
+  const createCustomCondition = useCallback((triggerType: string, condition: string) => {
     switch (triggerType) {
       case 'level':
         const [attr, level] = condition.split(':');
@@ -664,22 +704,12 @@ export const useApp = () => {
       default:
         return () => false;
     }
-  };
+  }, []);
 
   // Handle user config change
-  const handleUserConfigChange = (newConfig: UserConfig) => {
+  const handleUserConfigChange = useCallback((newConfig: UserConfig) => {
     setUserConfig(newConfig);
-  };
-
-  // 属性名称映射
-  const attributeNames: Record<string, string> = {
-    int: '智力',
-    str: '体魄',
-    vit: '精力',
-    cha: '社交',
-    eq: '情感',
-    cre: '创造'
-  };
+  }, []);
 
   return {
     // States
