@@ -1,14 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/postcss' // <-- 关键改动：导入正确的插件
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
 
 export default defineConfig({
   plugins: [react()],
-  // 直接在 vite config 中定义 css 和 postcss
   css: {
     postcss: {
       plugins: [
-        tailwindcss, // <-- 关键改动：直接使用导入的插件
+        tailwindcss,
+        autoprefixer,
       ],
     },
   },
