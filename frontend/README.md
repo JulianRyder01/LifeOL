@@ -8,7 +8,7 @@ LifeOL（人生Online）是一个将生活游戏化的应用程序，旨在通�
 
 - **框架**: React + TypeScript
 - **构建工具**: Vite
-- **状态管理**: React 内置状态管理 (useState, useEffect)
+- **状态管理**: React 内置状态管理 (useState, useEffect) + Context API
 - **样式**: Tailwind CSS
 - **包管理**: npm
 
@@ -18,6 +18,8 @@ LifeOL（人生Online）是一个将生活游戏化的应用程序，旨在通�
 frontend/
 ├── src/
 │   ├── components/     # React 组件
+│   ├── hooks/          # 自定义 React Hooks
+│   ├── contexts/       # React Context Providers
 │   ├── utils/          # 工具函数
 │   ├── types/          # TypeScript 类型定义
 │   ├── trickle/        # 业务规则和文档
@@ -258,6 +260,75 @@ graph TD
     E --> F[初始化组件状态]
 ```
 
+## 状态管理最佳实践
+
+### 自定义 Hooks
+
+项目采用自定义 Hooks 来封装和管理组件逻辑。主要的自定义 Hook 是 `useApp`，它包含了应用的核心状态和业务逻辑。
+
+#### useApp Hook
+
+位于 `src/hooks/useApp.ts`，负责：
+
+1. 管理所有应用状态（属性、事件、成就、道具等）
+2. 处理所有业务逻辑函数（添加事件、使用道具等）
+3. 处理数据持久化（localStorage 读写）
+4. 处理副作用（定时任务、初始化等）
+
+使用示例：
+```typescript
+import { useApp } from './hooks/useApp';
+
+const MyComponent = () => {
+  const { attributes, events, handleAddEvent } = useApp();
+  
+  // 使用状态和函数
+  return <div>{/* JSX */}</div>;
+};
+```
+
+### Context API
+
+为了避免深层组件的 props drilling 问题，项目使用 React Context API 来提供全局状态访问。
+
+#### AppContext
+
+位于 `src/contexts/AppContext.tsx`，提供了：
+
+1. 全局状态访问（通过 `useAppContext` hook）
+2. 避免多层组件传递 props
+3. 保持向后兼容性（组件仍可接收 props）
+
+使用示例：
+```typescript
+import { useAppContext } from './contexts/AppContext';
+
+const DeeplyNestedComponent = () => {
+  const { attributes, handleAddEvent } = useAppContext();
+  
+  // 直接访问全局状态，无需通过多层组件传递
+  return <div>{/* JSX */}</div>;
+};
+```
+
+### 状态管理架构
+
+```mermaid
+graph TD
+    A[App 组件] --> B[useApp Hook]
+    B --> C[Context Provider]
+    C --> D[子组件]
+    D --> E[useAppContext Hook]
+    E --> F[访问全局状态]
+```
+
+这种架构的优势：
+1. **逻辑与UI分离**：Hook 处理业务逻辑，组件专注于UI渲染
+2. **避免Props Drilling**：通过 Context API 提供全局状态访问
+3. **渐进式采用**：既支持传统 Props 传递，也支持 Context API
+4. **类型安全**：完整的 TypeScript 类型定义
+5. **易于测试**：业务逻辑集中在 Hook 中，便于单元测试
+
 ## 后端集成
 
 ### API 客户端
@@ -284,15 +355,23 @@ graph TD
 
 1. **类型安全**: 充分利用 TypeScript 的类型系统确保代码质量
 2. **组件化**: 将功能拆分为独立的可复用组件
-3. **状态管理**: 合理使用 React 状态管理，避免不必要的重渲染
+3. **状态管理**: 
+   - 使用自定义 Hooks 管理复杂状态逻辑
+   - 使用 Context API 避免 props drilling
+   - 合理使用 React 状态管理，避免不必要的重渲染
 4. **错误处理**: 为所有可能出错的操作添加适当的错误处理
 5. **本地存储**: 对所有 localStorage 操作进行 try-catch 包装
+6. **代码组织**:
+   - 逻辑与 UI 分离
+   - 关注点分离
+   - 单一职责原则
 
 ## 扩展性考虑
 
 1. **后端集成**: 当前使用 localStorage，未来可轻松替换为 REST API 调用
 2. **模块化设计**: 各功能模块相对独立，便于扩展和维护
 3. **配置管理**: 通过全局配置文件管理应用设置，便于维护
+4. **状态管理**: 采用可扩展的状态管理架构，支持未来可能的状态管理库迁移
 
 ## 常见问题
 
@@ -307,3 +386,30 @@ graph TD
 1. 在 [types/app.types.ts](file:///d:/Desktop/Develop/LifeOL/frontend/src/types/app.types.ts) 中的 [Achievement](file:///d:/Desktop/Develop/LifeOL/frontend/src/types/app.types.ts#L44-L58) 接口添加新的字段
 2. 在 [achievements.ts](file:///d:/Desktop/Develop/LifeOL/frontend/src/utils/achievements.ts) 中更新成就检查逻辑
 3. 更新成就显示组件以处理新的成就类型
+
+### 如何访问全局状态？
+
+有两种方式访问全局状态：
+
+1. **Props 传递**（传统方式）：
+   ```typescript
+   // App.tsx 中
+   <ChildComponent attributes={attributes} events={events} />
+   
+   // ChildComponent.tsx 中
+   const ChildComponent = ({ attributes, events }) => {
+     // 使用 props
+   };
+   ```
+
+2. **Context API**（推荐方式）：
+   ```typescript
+   import { useAppContext } from '../contexts/AppContext';
+   
+   const ChildComponent = () => {
+     const { attributes, events } = useAppContext();
+     // 直接使用全局状态
+   };
+   ```
+
+推荐在深层嵌套组件中使用 Context API，在顶层组件间传递仍可使用 Props 方式以保持向后兼容性。
