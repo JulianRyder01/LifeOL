@@ -1,5 +1,6 @@
 import React from 'react';
-import { Event } from '../types/app.types';
+import { Event } from '../../types/app.types';
+import { Clock, Calendar } from 'lucide-react';
 
 interface AttributeConfig {
   name: string;
@@ -74,13 +75,13 @@ function EventList({ events }: EventListProps) {
     return (
       <div className="card" data-name="event-list" data-file="components/EventList.js">
         <div className="flex items-center gap-2 mb-6">
-          <div className="icon-clock text-lg text-[var(--primary-color)]"></div>
+          <Clock className="text-[var(--primary-color)]" size={20} />
           <h2 className="text-lg font-semibold">最近活动</h2>
         </div>
 
         {events.length === 0 ? (
           <div className="text-center py-8">
-            <div className="icon-calendar text-4xl text-[var(--text-muted)] mb-4"></div>
+            <Calendar className="text-[var(--text-muted)] mb-4" size={48} />
             <p className="text-[var(--text-secondary)]">还没有记录任何事件</p>
             <p className="text-sm text-[var(--text-muted)] mt-1">点击"记录事件"开始你的人生冒险吧！</p>
           </div>
@@ -101,7 +102,7 @@ function EventList({ events }: EventListProps) {
                 
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(event.expGains)
-                    .filter(([_, exp]) => exp > 0)
+                    .filter(([_, exp]) => (exp as number) > 0)
                     .map(([attr, exp]) => (
                       <div
                         key={attr}
@@ -112,7 +113,7 @@ function EventList({ events }: EventListProps) {
                         }}
                       >
                         <div className={`icon-${attributeConfig[attr].icon} text-xs`}></div>
-                        <span className="text-xs">+{exp}</span>
+                        <span className="text-xs">+{exp as number}</span>
                       </div>
                     ))}
                 </div>

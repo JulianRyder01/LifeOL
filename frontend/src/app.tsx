@@ -1,18 +1,17 @@
 import React, { useState, useEffect, lazy, Suspense, memo, useMemo } from 'react';
 import Header from './components/Header';
-import StatsOverview from './components/StatsOverview';
-import AttributeCard from './components/AttributeCard';
-import EventList from './components/EventList';
 import EventModal from './components/EventModal';
 import AchievementModal from './components/AchievementModal';
 import StatusPanel from './components/StatusPanel';
 import NotFound from './components/NotFound';
 import DailyExpHeatmap from './components/DailyExpHeatmap';
 import AllActivitiesView from './components/AllActivitiesView';
+import Dashboard from './components/Dashboard';
 import { useApp } from './hooks/useApp';
 import { AppProvider } from './contexts/AppContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ArrowRight } from 'lucide-react';
 
 // Import components from their correct locations
 import ItemSystem from './features/items/ItemSystem';
@@ -30,6 +29,11 @@ const LazyAchievementSystem = lazy(() => import('./components/AchievementSystem'
 const LazyUserSettings = lazy(() => import('./features/user/UserSettings'));
 const LazyAllActivitiesView = lazy(() => import('./components/AllActivitiesView'));
 
+interface AppState {
+  hasError: boolean;
+  error?: Error;
+}
+
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
@@ -45,7 +49,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): AppState {
     return { hasError: true, error };
   }
 
@@ -56,10 +60,14 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">出现了一些问题</h1>
             <p className="text-gray-600 mb-4">很抱歉，发生了意外错误。</p>
+            {this.state.error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <p className="font-mono text-sm">{this.state.error.toString()}</p>
+              </div>
+            )}
             <button
               onClick={() => window.location.reload()}
               className="btn btn-primary"
@@ -67,7 +75,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               重新加载
             </button>
           </div>
-        </div>
       );
     }
 
@@ -166,7 +173,7 @@ const RecentActivities = memo(({
           className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors duration-200"
         >
           <span>全部活动</span>
-          <div className="icon-arrow-right text-xs"></div>
+          <ArrowRight size={16} />
         </button>
       </div>
       
@@ -185,10 +192,10 @@ const RecentActivities = memo(({
                   {event.description}
                 </p>
               )}
-              {event.expGains && Object.entries(event.expGains).some(([_, exp]) => exp > 0) && (
+              {event.expGains && Object.entries(event.expGains).some(([_, exp]) => (exp as number) > 0) && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {Object.entries(event.expGains).map(([attr, exp]) => 
-                    exp > 0 ? (
+                    (exp as number) > 0 ? (
                       <span 
                         key={attr} 
                         className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -199,7 +206,7 @@ const RecentActivities = memo(({
                         {attr === 'cha' && '👥'}
                         {attr === 'eq' && '❤️'}
                         {attr === 'cre' && '🎨'}
-                        <span className="hidden sm:inline">{attributeNames[attr] || attr}</span>: +{exp} EXP
+                        <span className="hidden sm:inline">{attributeNames[attr] || attr}</span>: +{exp as number} EXP
                       </span>
                     ) : null
                   )}
@@ -295,56 +302,25 @@ const App: React.FC = memo(() => {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
               {/* Dashboard Tab */}
               {appContextValue.activeTab === 'dashboard' && (
-                <div className="mt-4 sm:mt-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                      <StatsOverview 
-                        attributes={appContextValue.attributes} 
-                        achievements={appContextValue.achievements} 
-                        projectEvents={appContextValue.projectEvents}
-                        events={appContextValue.events}
-                      />
-                      
-                      <div className="mt-8">
-                        <TaskManager 
-                          projectEvents={appContextValue.projectEvents}
-                          items={appContextValue.items}
-                          onAddProjectEvent={appContextValue.handleAddProjectEvent}
-                          onUpdateProjectEvent={appContextValue.handleUpdateProjectEvent}
-                          onCompleteProjectEvent={appContextValue.handleCompleteProjectEvent}
-                          onDeleteProjectEvent={appContextValue.handleDeleteProjectEvent}
-                          onResetProjectEvent={appContextValue.handleResetProjectEvent}
-                          onEditProjectEvent={appContextValue.handleEditProjectEvent}
-                          attributeNames={appContextValue.attributeNames}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      {/* 每日经验热力图 */}
-                      <DailyExpHeatmap events={appContextValue.events} attributes={appContextValue.attributes} />
-                      
-                      {/* 当前道具 */}
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">当前道具</h2>
-                        <ItemsGrid 
-                          items={appContextValue.items}
-                          setItemToUse={appContextValue.setItemToUse}
-                          setShowUseItemModal={appContextValue.setShowUseItemModal}
-                          attributeNames={appContextValue.attributeNames}
-                        />
-                      </div>
-                      
-                      {/* 最近活动 */}
-                      <RecentActivities 
-                        getRecentActivities={recentActivitiesData.getRecentActivities}
-                        formatActivityTime={recentActivitiesData.formatActivityTime}
-                        attributeNames={recentActivitiesData.attributeNames}
-                        setShowAllActivities={recentActivitiesData.setShowAllActivities}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <Dashboard
+                  attributes={appContextValue.attributes}
+                  events={appContextValue.events}
+                  achievements={appContextValue.achievements}
+                  items={appContextValue.items}
+                  projectEvents={appContextValue.projectEvents}
+                  attributeNames={appContextValue.attributeNames}
+                  handleAddProjectEvent={appContextValue.handleAddProjectEvent}
+                  handleUpdateProjectEvent={appContextValue.handleUpdateProjectEvent}
+                  handleCompleteProjectEvent={appContextValue.handleCompleteProjectEvent}
+                  handleDeleteProjectEvent={appContextValue.handleDeleteProjectEvent}
+                  handleResetProjectEvent={appContextValue.handleResetProjectEvent}
+                  handleEditProjectEvent={appContextValue.handleEditProjectEvent}
+                  setShowAllActivities={appContextValue.setShowAllActivities}
+                  setItemToUse={appContextValue.setItemToUse}
+                  setShowUseItemModal={appContextValue.setShowUseItemModal}
+                  getRecentActivities={appContextValue.getRecentActivities}
+                  formatActivityTime={appContextValue.formatActivityTime}
+                />
               )}
               
               {/* Events Tab */}
@@ -432,9 +408,15 @@ const App: React.FC = memo(() => {
               {appContextValue.activeTab === 'user-settings' && (
                 <div className="mt-4 sm:mt-8">
                   <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>}>
-                    <LazyUserSettings
-                      userConfig={appContextValue.userConfig}
-                      onUserConfigChange={appContextValue.handleUserConfigChange}
+                    <LazyUserSettings 
+                      userConfig={{
+                        username: '秋实',
+                        avatar: '🍁'
+                      }}
+                      onUserConfigChange={(config) => {
+                        // Handle user config change
+                        console.log('User config changed:', config);
+                      }}
                       onBack={() => appContextValue.setActiveTab('dashboard')}
                     />
                   </Suspense>

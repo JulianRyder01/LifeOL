@@ -3,7 +3,6 @@ import { Attributes, AttributeConfig, Achievement } from '../types/app.types';
 import { getExpForLevel, getProgressToNextLevel } from '../utils/calculations';
 import AttributeCard from './AttributeCard';
 import { getAvailableTitles } from '../utils/achievements';
-
 // 导入衰减配置
 import { DECAY_CONFIG } from '../utils/achievements';
 

@@ -1,34 +1,26 @@
 import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import StatsOverview from './StatsOverview';
-import TaskManager from './TaskManager';
+import TaskManager from '../features/tasks/TaskManager';
 import DailyExpHeatmap from './DailyExpHeatmap';
-import { Attributes, Event, Achievement, Item, ProjectEvent } from '../types/app.types';
-
-interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  timestamp: string;
-  expGains: Record<string, number>;
-}
 
 interface DashboardProps {
-  attributes: Attributes;
-  events: Event[];
-  achievements: Achievement[];
-  items: Item[];
-  projectEvents: ProjectEvent[];
+  attributes: any;
+  events: any[];
+  achievements: any[];
+  items: any[];
+  projectEvents: any[];
   attributeNames: Record<string, string>;
-  handleAddProjectEvent: (projectEventData: Omit<ProjectEvent, 'id' | 'createdAt'>) => void;
+  handleAddProjectEvent: (projectEventData: any) => void;
   handleUpdateProjectEvent: (id: string, progress: number, reason?: string) => void;
   handleCompleteProjectEvent: (id: string) => void;
   handleDeleteProjectEvent: (id: string) => void;
   handleResetProjectEvent: (id: string) => void;
-  handleEditProjectEvent: (id: string, updates: Partial<ProjectEvent>) => void;
+  handleEditProjectEvent: (id: string, updates: Partial<any>) => void;
   setShowAllActivities: (show: boolean) => void;
-  setItemToUse: (item: Item) => void;
+  setItemToUse: (item: any) => void;
   setShowUseItemModal: (show: boolean) => void;
-  getRecentActivities: () => Activity[];
+  getRecentActivities: () => any[];
   formatActivityTime: (timestamp: string) => string;
 }
 
@@ -55,14 +47,16 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="mt-4 sm:mt-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <StatsOverview 
-            attributes={attributes} 
-            achievements={achievements} 
-            projectEvents={projectEvents}
-            events={events}
-          />
+          <div className="bg-white rounded-lg shadow p-6">
+            <StatsOverview 
+              attributes={attributes} 
+              achievements={achievements} 
+              projectEvents={projectEvents}
+              events={events}
+            />
+          </div>
           
-          <div className="mt-8">
+          <div className="mt-8 bg-white rounded-lg shadow p-6">
             <TaskManager 
               projectEvents={projectEvents}
               items={items}
@@ -79,7 +73,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         <div className="space-y-6">
           {/* 每日经验热力图 */}
-          <DailyExpHeatmap events={events} attributes={attributes} />
+          <DailyExpHeatmap events={events as any} attributes={attributes} />
           
           {/* 当前道具 */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -145,13 +139,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
                 <span>全部活动</span>
-                <div className="icon-arrow-right text-xs"></div>
+                <ArrowRight size={16} />
               </button>
             </div>
             
             {getRecentActivities().slice(0, 6).length > 0 ? (
               <div className="space-y-4">
-                {getRecentActivities().slice(0, 6).map((event: Activity) => (
+                {getRecentActivities().slice(0, 6).map((event: any) => (
                   <div key={event.id} className="border border-gray-200 rounded-lg p-3 sm:p-4">
                     <div className="flex justify-between flex-wrap">
                       <h3 className="font-medium text-gray-900 text-sm sm:text-base">{event.title}</h3>
@@ -178,7 +172,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                               {attr === 'cha' && '👥'}
                               {attr === 'eq' && '❤️'}
                               {attr === 'cre' && '🎨'}
-                              <span className="hidden sm:inline">{attributeNames[attr] || attr}</span>: +{exp} EXP
+                              <span className="hidden sm:inline">{attributeNames[attr] || attr}</span>: +{exp as number} EXP
                             </span>
                           ) : null
                         )}

@@ -4,9 +4,9 @@
 function getExpForLevel(level: number): number {
   if (level <= 1) return 0;
   // New system: first level needs 50 EXP, then each level adds 25 EXP
-  // Level 2: 50 EXP
-  // Level 3: 75 EXP (50 + 25)
-  // Level 4: 100 EXP (75 + 25)
+  // Level 1 → 2: 50 EXP
+  // Level 2 → 3: 75 EXP (50 + 25)
+  // Level 3 → 4: 100 EXP (75 + 25)
   // ...
   return 50 + (level - 2) * 25;
 }

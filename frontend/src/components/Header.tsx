@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react';
 import { Achievement } from '../types/app.types';
+import { Plus, X } from 'lucide-react';
 
 interface HeaderProps {
   onAddEvent: () => void;
@@ -102,7 +103,7 @@ const Header: React.FC<HeaderProps> = memo(({ onAddEvent, onShowAchievements, ac
               onClick={onAddEvent}
               className="hidden sm:block ml-2 md:ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition-colors duration-200"
             >
-              <span className="icon-plus mr-1"></span>
+              <Plus className="mr-1" size={16} />
               记录事件
             </button>
             
@@ -110,7 +111,7 @@ const Header: React.FC<HeaderProps> = memo(({ onAddEvent, onShowAchievements, ac
               <div className="relative ml-3">
                 <div>
                   <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    onClick={() => onTabChange('user-settings')}
                     className="flex items-center max-w-xs text-sm rounded-full focus:outline-none"
                     id="user-menu-button"
                     aria-expanded="false"
@@ -131,7 +132,7 @@ const Header: React.FC<HeaderProps> = memo(({ onAddEvent, onShowAchievements, ac
               >
                 <span className="sr-only">Open main menu</span>
                 {showMobileMenu ? (
-                  <span className="icon-x block h-6 w-6"></span>
+                  <X size={24} />
                 ) : (
                   <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -228,7 +229,7 @@ const Header: React.FC<HeaderProps> = memo(({ onAddEvent, onShowAchievements, ac
               }}
               className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left transition-colors duration-200"
             >
-              <span className="icon-plus mr-1"></span>
+              <Plus className="mr-1" size={16} />
               记录事件
             </button>
           </div>

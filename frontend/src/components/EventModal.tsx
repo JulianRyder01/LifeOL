@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AttributeConfig } from '../types/app.types';
+import { X } from 'lucide-react';
 
 interface EventModalProps {
   onClose: () => void;
@@ -104,146 +105,142 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
     };
 
     return (
-      <div className="modal-overlay" onClick={onClose} data-name="event-modal" data-file="components/EventModal.js">
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <div className="p-6 border-b border-[var(--border-color)]">
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+          <div className="mt-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">记录人生事件</h2>
+              <h3 className="text-lg font-medium text-gray-900">记录人生事件</h3>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100"
+                className="text-gray-400 hover:text-gray-500"
               >
-                <div className="icon-x text-lg text-[var(--text-secondary)]"></div>
+                <X className="h-6 w-6" />
               </button>
             </div>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                事件标题 *
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="例如：读完《三体》第一章"
-                className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent"
-                required
-              />
-            </div>
+            
+            <form onSubmit={handleSubmit} className="mt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">事件标题 *</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="例如：读完《三体》第一章"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                  required
+                />
+              </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-[var(--text-primary)]">
-                  心情感悟
+              <div className="mt-4">
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium text-gray-700">心灵感悟</label>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="event-markdown"
+                      checked={useMarkdown}
+                      onChange={(e) => setUseMarkdown(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 rounded"
+                    />
+                    <label htmlFor="event-markdown" className="ml-1 text-sm text-gray-600">
+                      使用Markdown
+                    </label>
+                  </div>
+                </div>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="记录你的感想和收获..."
+                  rows={3}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                />
+                {useMarkdown && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    支持 **粗体**、*斜体*、`代码` 等基本Markdown语法
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  经验值变化（可选）
                 </label>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="event-markdown"
-                    checked={useMarkdown}
-                    onChange={(e) => setUseMarkdown(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 rounded"
-                  />
-                  <label htmlFor="event-markdown" className="ml-1 text-sm text-gray-600">
-                    使用Markdown
-                  </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {attributeOptions.map(attr => (
+                    <div
+                      key={attr.key}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        selectedAttributes[attr.key] 
+                          ? 'border-2' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      style={{
+                        borderColor: selectedAttributes[attr.key] ? attr.color : undefined
+                      }}
+                      onClick={() => handleAttributeToggle(attr.key)}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div 
+                          className={`icon-${attr.icon} text-lg`}
+                          style={{ color: attr.color }}
+                        ></div>
+                        <span className="font-medium">{attr.name}</span>
+                      </div>
+                      {selectedAttributes[attr.key] && (
+                        <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-1 flex-wrap">
+                            {[-10, -5, 5, 10, 20].map(exp => (
+                              <button
+                                key={exp}
+                                type="button"
+                                onClick={() => handleExpChange(attr.key, exp.toString())}
+                                className={`px-2 py-1 text-xs rounded transition-colors ${
+                                  selectedAttributes[attr.key] === exp
+                                    ? 'text-white'
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                                style={{
+                                  backgroundColor: selectedAttributes[attr.key] === exp ? attr.color : undefined
+                                }}
+                              >
+                                {exp > 0 ? `+${exp}` : exp}
+                              </button>
+                            ))}
+                          </div>
+                          <input
+                            type="number"
+                            min="-50"
+                            max="50"
+                            value={selectedAttributes[attr.key]}
+                            onChange={(e) => handleExpChange(attr.key, e.target.value)}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            placeholder="自定义经验值"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="记录你的感想和收获..."
-                rows={3}
-                className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent resize-none"
-              />
-              {useMarkdown && (
-                <p className="mt-1 text-xs text-gray-500">
-                  支持 **粗体**、*斜体*、`代码` 等基本Markdown语法
-                </p>
-              )}
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--text-primary)] mb-3">
-                经验值变化（可选）
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {attributeOptions.map(attr => (
-                  <div
-                    key={attr.key}
-                    className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                      selectedAttributes[attr.key] 
-                        ? 'border-2' 
-                        : 'border-[var(--border-color)] hover:border-gray-300'
-                    }`}
-                    style={{
-                      borderColor: selectedAttributes[attr.key] ? attr.color : undefined
-                    }}
-                    onClick={() => handleAttributeToggle(attr.key)}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div 
-                        className={`icon-${attr.icon} text-lg`}
-                        style={{ color: attr.color }}
-                      ></div>
-                      <span className="font-medium">{attr.name}</span>
-                    </div>
-                    {selectedAttributes[attr.key] && (
-                      <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1 flex-wrap">
-                          {[-10, -5, 5, 10, 20].map(exp => (
-                            <button
-                              key={exp}
-                              type="button"
-                              onClick={() => handleExpChange(attr.key, exp.toString())}
-                              className={`px-2 py-1 text-xs rounded transition-colors ${
-                                selectedAttributes[attr.key] === exp
-                                  ? 'text-white'
-                                  : 'bg-gray-100 hover:bg-gray-200'
-                              }`}
-                              style={{
-                                backgroundColor: selectedAttributes[attr.key] === exp ? attr.color : undefined
-                              }}
-                            >
-                              {exp > 0 ? `+${exp}` : exp}
-                            </button>
-                          ))}
-                        </div>
-                        <input
-                          type="number"
-                          min="-50"
-                          max="50"
-                          value={selectedAttributes[attr.key]}
-                          onChange={(e) => handleExpChange(attr.key, e.target.value)}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[var(--primary-color)]"
-                          placeholder="自定义经验值"
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="mt-5 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  disabled={!title.trim()}
+                >
+                  保存事件
+                </button>
               </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn btn-secondary flex-1"
-              >
-                取消
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary flex-1"
-                disabled={!title.trim()}
-              >
-                保存事件
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     );

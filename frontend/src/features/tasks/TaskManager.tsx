@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ProjectEvent, Item, ProjectEventProgressLog, ProgressButtonConfig } from '../types/app.types';
+import { ProjectEvent, Item, ProjectEventProgressLog, ProgressButtonConfig } from '../../types/app.types';
+import { Plus, Trash2, Settings, RotateCcw, CheckCircle, Clock, Calendar, ListTodo } from 'lucide-react';
 
 // AnimatedNumber component for smooth number transitions
 const AnimatedNumber = ({ value, className }: { value: number; className?: string }) => {
@@ -412,7 +413,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
     <div className="card" data-name="task-manager" data-file="components/TaskManager.js">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-2">
-          <div className="icon-tasks text-lg text-[var(--primary-color)]"></div>
+          <ListTodo className="text-[var(--primary-color)]" size={20} />
           <h2 className="text-lg sm:text-xl font-semibold">进行中的任务</h2>
         </div>
         <button
@@ -420,7 +421,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
           className="btn btn-primary px-3 py-1.5 text-sm sm:px-4 sm:py-2"
         >
           <span className="flex items-center gap-1">
-            <div className="icon-plus text-sm"></div>
+            <Plus size={16} />
             <span>添加任务</span>
           </span>
         </button>
@@ -583,7 +584,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                       }}
                       className="p-1 text-red-500 hover:text-red-700"
                     >
-                      <div className="icon-trash text-sm"></div>
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
@@ -610,7 +611,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
 
       {ongoingTasks.length === 0 ? (
         <div className="text-center py-8">
-          <div className="icon-tasks text-4xl text-[var(--text-muted)] mb-4"></div>
+          <ListTodo className="text-[var(--text-muted)] mb-4" size={48} />
           <p className="text-[var(--text-secondary)]">还没有进行中的任务</p>
           <p className="text-sm text-[var(--text-muted)] mt-1">点击"添加任务"来创建你的第一个任务吧！</p>
         </div>
@@ -752,7 +753,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                             onClick={() => removeCustomButton(index)}
                             className="p-1 text-red-500 hover:text-red-700"
                           >
-                            <div className="icon-trash text-sm"></div>
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       ))}
@@ -917,13 +918,13 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                       onClick={() => startEditingTask(projectEvent)}
                       className="self-start p-1 text-gray-400 hover:text-blue-500"
                     >
-                      <div className="icon-settings text-lg"></div>
+                      <Settings size={18} />
                     </button>
                     <button
                       onClick={() => handleDeleteProjectEvent(projectEvent.id)}
                       className="self-start p-1 text-gray-400 hover:text-red-500"
                     >
-                      <div className="icon-trash text-lg"></div>
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -937,7 +938,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
       {completedTasks.length > 0 && (
         <div className="mt-8">
           <div className="flex items-center gap-2 mb-6">
-            <div className="icon-check-circle text-lg text-[var(--primary-color)]"></div>
+            <CheckCircle className="text-[var(--primary-color)]" size={20} />
             <h2 className="text-lg sm:text-xl font-semibold">已完成的任务</h2>
           </div>
           
@@ -999,7 +1000,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
                     onClick={() => onResetProjectEvent(projectEvent.id)}
                     className="self-start px-3 py-1.5 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 flex items-center gap-1"
                   >
-                    <div className="icon-rotate-ccw text-sm"></div>
+                    <RotateCcw size={16} />
                     <span>重新编排</span>
                   </button>
                 </div>

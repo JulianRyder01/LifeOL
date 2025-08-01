@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Achievement } from '../types/app.types';
+import { Award, X, Plus, Star, Trophy, Medal, Crown, Target, Flame, Heart, Zap, Compass, Lightbulb, HandHeart, Mountain } from 'lucide-react';
 
 interface AchievementModalProps {
   onClose: () => void;
@@ -11,6 +12,22 @@ interface TriggerType {
   value: string;
   label: string;
 }
+
+// Icon mapping
+const iconMap: Record<string, React.ComponentType<any>> = {
+  star: Star,
+  trophy: Trophy,
+  medal: Medal,
+  crown: Crown,
+  target: Target,
+  flame: Flame,
+  heart: Heart,
+  zap: Zap,
+  compass: Compass,
+  lightbulb: Lightbulb,
+  'hand-heart': HandHeart,
+  mountain: Mountain
+};
 
 function AchievementModal({ onClose, onSubmit, achievements }: AchievementModalProps) {
   try {
@@ -66,14 +83,14 @@ function AchievementModal({ onClose, onSubmit, achievements }: AchievementModalP
           <div className="p-6 border-b border-[var(--border-color)]">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
-                <div className="icon-award text-xl text-yellow-600"></div>
+                <Award className="text-yellow-600" size={24} />
                 我的成就星碑
               </h2>
               <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100"
               >
-                <div className="icon-x text-lg text-[var(--text-secondary)]"></div>
+                <X className="text-[var(--text-secondary)]" size={20} />
               </button>
             </div>
           </div>
@@ -85,7 +102,7 @@ function AchievementModal({ onClose, onSubmit, achievements }: AchievementModalP
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="btn btn-primary text-sm"
               >
-                <div className="icon-plus text-sm"></div>
+                <Plus size={16} />
                 添加成就
               </button>
             </div>
@@ -144,20 +161,23 @@ function AchievementModal({ onClose, onSubmit, achievements }: AchievementModalP
                 <div>
                   <label className="block text-sm font-medium mb-2">图标</label>
                   <div className="flex gap-2 flex-wrap">
-                    {iconOptions.map(iconName => (
-                      <button
-                        key={iconName}
-                        type="button"
-                        onClick={() => setIcon(iconName)}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-colors ${
-                          icon === iconName 
-                            ? 'border-[var(--primary-color)] bg-[var(--primary-color)] text-white' 
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <div className={`icon-${iconName} text-lg`}></div>
-                      </button>
-                    ))}
+                    {iconOptions.map(iconName => {
+                      const IconComponent = iconMap[iconName];
+                      return (
+                        <button
+                          key={iconName}
+                          type="button"
+                          onClick={() => setIcon(iconName)}
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-colors ${
+                            icon === iconName 
+                              ? 'border-[var(--primary-color)] bg-[var(--primary-color)] text-white' 
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          {IconComponent && <IconComponent size={20} />}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -168,29 +188,32 @@ function AchievementModal({ onClose, onSubmit, achievements }: AchievementModalP
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {unlockedAchievements.map(achievement => (
-                <div key={achievement.id} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
-                      <div className={`icon-${achievement.icon} text-lg text-yellow-600`}></div>
+              {unlockedAchievements.map(achievement => {
+                const IconComponent = iconMap[achievement.icon] || Star;
+                return (
+                  <div key={achievement.id} className="p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+                        <IconComponent className="text-yellow-600" size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{achievement.title}</h4>
+                        {achievement.description && (
+                          <p className="text-sm text-gray-600">{achievement.description}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{achievement.title}</h4>
-                      {achievement.description && (
-                        <p className="text-sm text-gray-600">{achievement.description}</p>
-                      )}
+                    <div className="text-xs text-gray-500">
+                      {achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString('zh-CN') : ''}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString('zh-CN') : ''}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {unlockedAchievements.length === 0 && (
               <div className="text-center py-8">
-                <div className="icon-award text-4xl text-gray-400 mb-4"></div>
+                <Award className="text-gray-400 mb-4" size={48} />
                 <p className="text-gray-600">还没有获得任何成就</p>
                 <p className="text-sm text-gray-500 mt-1">继续努力，解锁你的第一个成就吧！</p>
               </div>
