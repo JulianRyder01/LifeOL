@@ -1,23 +1,32 @@
 import React from 'react';
 import { Event, ProjectEvent, Achievement, Item } from '../types/app.types';
+import { ATTRIBUTE_CONFIG } from '../types/attribute.types';
 
 interface AllActivitiesViewProps {
   events: Event[];
   projectEvents: ProjectEvent[];
   achievements: Achievement[];
   items: Item[];
-  attributeNames: Record<string, string>;
+  attributeNames?: Record<string, string>;
   onReturn: () => void;
 }
 
-const AllActivitiesView: React.FC<AllActivitiesViewProps> = ({
-  events,
-  projectEvents,
-  achievements,
-  items,
-  attributeNames,
-  onReturn
-}) => {
+// 使用集中化的属性配置
+const attributeConfig = ATTRIBUTE_CONFIG;
+
+function AllActivitiesView({ events, projectEvents, achievements, items, attributeNames = {}, onReturn }: AllActivitiesViewProps) {
+  // Merge default attribute names with provided ones
+  const mergedAttributeNames: Record<string, { name: string; icon: string; color: string } | string> = { ...attributeConfig, ...attributeNames };
+  
+  // 获取属性名称的辅助函数
+  const getAttributeName = (attrKey: string) => {
+    const attr = mergedAttributeNames[attrKey];
+    if (typeof attr === 'string') {
+      return attr;
+    }
+    return attr?.name || attrKey;
+  };
+
   // Format time for activities
   const formatActivityTime = (timestamp: string) => {
     const date = new Date(timestamp);

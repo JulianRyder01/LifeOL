@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Event, Attributes } from '../types/app.types';
+import { ATTRIBUTE_CONFIG, ATTRIBUTE_KEYS } from '../types/attribute.types';
 
 interface Badge {
   id: string;
@@ -65,127 +66,59 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
     
     // 徽章列表（按优先级排序）
     const badges: Badge[] = [
+      // 属性专项类徽章
+      ...ATTRIBUTE_KEYS.map((key) => {
+        const config = ATTRIBUTE_CONFIG[key];
+        return {
+          id: `${config.name.toLowerCase()}-specialist`,
+          title: `${config.name}专家`,
+          description: `你在${config.name}方面表现卓越！`,
+          icon: config.icon,
+          condition: `${config.name}属性经验值 ≥ 150`,
+          unlocked: false // Will be determined based on user's actual progress
+        };
+      }),
+      
       // 总经验值类徽章
       {
         id: 'life-winner',
         title: '人生赢家',
-        description: '你像开了挂一样，人生正在高速升级！',
-        icon: '🏆',
-        condition: `总经验值 ≥ 700 (当前: ${totalExpGain})`
+        description: '全方位发展，生活丰富多彩！',
+        icon: '👑',
+        condition: '一周总经验值 ≥ 700',
+        unlocked: false
       },
       {
         id: 'momentum',
         title: '势如破竹',
-        description: '进步飞速，无人能挡！',
+        description: '保持着良好的发展势头！',
         icon: '🚀',
-        condition: `总经验值 ≥ 500 (当前: ${totalExpGain})`
+        condition: '一周总经验值 ≥ 500',
+        unlocked: false
       },
       {
         id: 'steady',
-        title: '稳步提升',
-        description: '每天一点点，进步看得见！',
-        icon: '📈',
-        condition: `总经验值 ≥ 200 (当前: ${totalExpGain})`
+        title: '稳步前行',
+        description: '稳定的发展步伐，持续进步！',
+        icon: '🚶',
+        condition: '一周总经验值 ≥ 200',
+        unlocked: false
       },
       {
         id: 'persevering',
-        title: '砥砺前行',
-        description: '你仍在努力，保持前进的动力！',
-        icon: '💪',
-        condition: `总经验值 ≥ 50 (当前: ${totalExpGain})`
+        title: '坚持不懈',
+        description: '即使进步微小，也在坚持努力！',
+        icon: '🐌',
+        condition: '一周总经验值 ≥ 50',
+        unlocked: false
       },
       {
         id: 'plain',
-        title: '略显平淡',
-        description: '最近的生活有点平静，是时候给自己加点料了！',
-        icon: '☕',
-        condition: `总经验值在-50到50之间 (当前: ${totalExpGain})`
-      },
-      
-      // 属性专项类徽章
-      {
-        id: 'study-god',
-        title: '学霸附体',
-        description: '求知若渴，智商爆表！',
-        icon: '🧠',
-        condition: `智力属性经验值 ≥ 150 (当前: ${attributeGains.int})`
-      },
-      {
-        id: 'mind-active',
-        title: '思维活跃',
-        description: '你的大脑正在高速运转，点亮智慧火花！',
-        icon: '💡',
-        condition: `智力属性经验值 ≥ 80 (当前: ${attributeGains.int})`
-      },
-      {
-        id: 'energetic',
-        title: '活力满满',
-        description: '精力充沛，身体是革命的本钱！',
-        icon: '🏃',
-        condition: `体魄属性经验值 ≥ 300 (当前: ${attributeGains.str})`
-      },
-      {
-        id: 'fitness',
-        title: '体能达人',
-        description: '坚持锻炼，健康生活每一天！',
-        icon: '💪',
-        condition: `体魄属性经验值 ≥ 100 (当前: ${attributeGains.str})`
-      },
-      {
-        id: 'charged',
-        title: '充电完成',
-        description: '懂得休息才能更好地出发，你已充满电！',
-        icon: '🔋',
-        condition: `精力属性经验值 ≥ 120 (当前: ${attributeGains.vit})`
-      },
-      {
-        id: 'efficient',
-        title: '高效模式',
-        description: '精力管理有方，做事更有效率！',
-        icon: '⚡',
-        condition: `精力属性经验值 ≥ 60 (当前: ${attributeGains.vit})`
-      },
-      {
-        id: 'network',
-        title: '人脉广阔',
-        description: '交友达人，你的魅力无法阻挡！',
-        icon: '👥',
-        condition: `社交属性经验值 ≥ 150 (当前: ${attributeGains.cha})`
-      },
-      {
-        id: 'social-active',
-        title: '社交活跃',
-        description: '积极互动，拓展你的社交圈！',
-        icon: '🤝',
-        condition: `社交属性经验值 ≥ 80 (当前: ${attributeGains.cha})`
-      },
-      {
-        id: 'emotion-master',
-        title: '情绪大师',
-        description: '洞察内心，平衡情绪，你已炉火纯青！',
-        icon: '😊',
-        condition: `情感属性经验值 ≥ 100 (当前: ${attributeGains.eq})`
-      },
-      {
-        id: 'inner-growth',
-        title: '内心成长',
-        description: '关注自我，你的情感世界正在丰富！',
-        icon: '❤️',
-        condition: `情感属性经验值 ≥ 50 (当前: ${attributeGains.eq})`
-      },
-      {
-        id: 'inspiration',
-        title: '灵感爆发',
-        description: '创意无限，你的脑洞突破天际！',
-        icon: '🎨',
-        condition: `创造属性经验值 ≥ 150 (当前: ${attributeGains.cre})`
-      },
-      {
-        id: 'creator',
-        title: '创想家',
-        description: '动手实践，让你的奇思妙想变为现实！',
-        icon: '🔧',
-        condition: `创造属性经验值 ≥ 80 (当前: ${attributeGains.cre})`
+        title: '平淡是真',
+        description: '平平淡淡，也有别样精彩！',
+        icon: '🍃',
+        condition: '一周总经验值在-50到50之间',
+        unlocked: false
       },
       
       // 特殊成就类徽章
@@ -194,14 +127,16 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
         title: '全能战士',
         description: '你全面发展，没有短板！',
         icon: '🏅',
-        condition: '所有属性经验值 ≥ 10'
+        condition: '所有属性经验值 ≥ 10',
+        unlocked: false
       },
       {
         id: 'breakthrough',
         title: '突破自我',
         description: '恭喜你，又一次超越了自己！',
         icon: '🌟',
-        condition: '待定义'
+        condition: '待定义',
+        unlocked: false
       }
     ];
 

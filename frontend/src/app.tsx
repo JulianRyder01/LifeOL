@@ -16,6 +16,7 @@ import DailyExpHeatmap from './components/DailyExpHeatmap';
 import AllActivitiesView from './components/AllActivitiesView';
 import { useApp } from './hooks/useApp';
 import { AppProvider } from './contexts/AppContext';
+import { ATTRIBUTE_CONFIG } from './types/attribute.types';
 
 // Lazy load components that are not immediately needed
 const LazyEventManager = lazy(() => import('./components/EventManager'));
