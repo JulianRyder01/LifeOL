@@ -11,15 +11,7 @@ import DailyExpHeatmap from './components/DailyExpHeatmap';
 import AllActivitiesView from './components/AllActivitiesView';
 import { useApp } from './hooks/useApp';
 import { AppProvider } from './contexts/AppContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// Import components from their correct locations
-import ItemSystem from './features/items/ItemSystem';
-import TaskManager from './features/tasks/TaskManager';
-import EventManager from './features/events/EventManager';
-import AchievementSystem from './components/AchievementSystem';
-import UserSettings from './features/user/UserSettings';
+import { ATTRIBUTE_CONFIG } from './types/attribute.types';
 
 // Lazy load components that are not immediately needed
 const LazyEventManager = lazy(() => import('./features/events/EventManager'));

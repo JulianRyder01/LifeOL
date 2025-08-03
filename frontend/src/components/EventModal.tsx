@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AttributeConfig } from '../types/app.types';
+import { ATTRIBUTE_CONFIG, ATTRIBUTE_KEYS } from '../types/attribute.types';
 
 interface EventModalProps {
   onClose: () => void;
@@ -24,14 +25,11 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
     const [useMarkdown, setUseMarkdown] = useState(false);
     const [selectedAttributes, setSelectedAttributes] = useState<SelectedAttributes>({});
 
-    const attributeOptions: AttributeOption[] = [
-      { key: 'int', name: '智力', icon: 'book-open', color: 'var(--int-color)' },
-      { key: 'str', name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
-      { key: 'vit', name: '精力', icon: 'battery', color: 'var(--vit-color)' },
-      { key: 'cha', name: '社交', icon: 'users', color: 'var(--cha-color)' },
-      { key: 'eq', name: '情感', icon: 'heart', color: 'var(--eq-color)' },
-      { key: 'cre', name: '创造', icon: 'palette', color: 'var(--cre-color)' }
-    ];
+    // 使用集中化的属性配置
+    const attributeOptions = ATTRIBUTE_KEYS.map((key) => ({
+      ...ATTRIBUTE_CONFIG[key],
+      key
+    }));
 
     const handleAttributeToggle = (attrKey: string) => {
       setSelectedAttributes(prev => {
@@ -57,7 +55,7 @@ function EventModal({ onClose, onSubmit }: EventModalProps) {
       if (!title.trim()) return; // 移除了经验选择的必填限制
 
       const expGains: Record<string, number> = {};
-      attributeOptions.forEach(attr => {
+      attributeOptions.forEach((attr: AttributeOption) => {
         expGains[attr.key] = selectedAttributes[attr.key] || 0;
       });
 

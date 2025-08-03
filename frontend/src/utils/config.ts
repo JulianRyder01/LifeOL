@@ -1,6 +1,14 @@
 // 从 package.json 获取应用版本号
 import packageJson from '../../package.json';
 
+// Add type declaration for Node.js process object
+declare const process: {
+  env: {
+    NODE_ENV: string;
+    [key: string]: string | undefined;
+  };
+};
+
 // App global configuration
 export const APP_CONFIG = {
   // 应用版本号，来自 package.json，标识整个应用程序的版本

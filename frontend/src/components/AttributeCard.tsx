@@ -1,30 +1,23 @@
 import React from 'react';
 import { Attribute } from '../types/app.types';
 import { getExpForLevel } from '../utils/calculations';
+import { ATTRIBUTE_CONFIG } from '../types/attribute.types';
 
 interface AttributeCardProps {
   attributeKey: string;
   attribute: Attribute;
 }
 
-interface AttributeIconConfig {
-  name: string;
-  icon: string;
-  color: string;
-}
-
 function AttributeCard({ attributeKey, attribute }: AttributeCardProps) {
   try {
-    const attributeConfig: Record<string, AttributeIconConfig> = {
-      int: { name: '智力', icon: 'book-open', color: 'var(--int-color)' },
-      str: { name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
-      vit: { name: '精力', icon: 'battery', color: 'var(--vit-color)' },
-      cha: { name: '社交', icon: 'users', color: 'var(--cha-color)' },
-      eq: { name: '情感', icon: 'heart', color: 'var(--eq-color)' },
-      cre: { name: '创造', icon: 'palette', color: 'var(--cre-color)' }
-    };
+    // 使用集中化的属性配置
+    const config = ATTRIBUTE_CONFIG[attributeKey as keyof typeof ATTRIBUTE_CONFIG];
+    
+    if (!config) {
+      console.error(`Unknown attribute key: ${attributeKey}`);
+      return null;
+    }
 
-    const config = attributeConfig[attributeKey];
     const expForNextLevel = getExpForLevel(attribute.level + 1);
     const expForCurrentLevel = getExpForLevel(attribute.level);
     const progressPercent = ((attribute.exp - expForCurrentLevel) / (expForNextLevel - expForCurrentLevel)) * 100;
