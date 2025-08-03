@@ -1,6 +1,7 @@
 import React from 'react';
-import { Attributes, Achievement, AttributeConfig } from '../types/app.types';
+import { Attributes, Achievement } from '../types/app.types';
 import { getExpForLevel, getProgressToNextLevel } from '../utils/calculations';
+import { ATTRIBUTE_CONFIG, ATTRIBUTE_KEYS } from '../types/attribute.types';
 
 interface StatsOverviewProps {
   attributes: Attributes;
@@ -28,15 +29,6 @@ function StatsOverview({ attributes, achievements, projectEvents = [], events = 
     
     // Count experiences (simply the number of events)
     const experienceCount = events.length;
-
-    const attributeConfig: Record<string, AttributeConfig> = {
-      int: { name: '智力', icon: 'book-open', color: 'var(--int-color)' },
-      str: { name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
-      vit: { name: '精力', icon: 'battery', color: 'var(--vit-color)' },
-      cha: { name: '社交', icon: 'users', color: 'var(--cha-color)' },
-      eq: { name: '情感', icon: 'heart', color: 'var(--eq-color)' },
-      cre: { name: '创造', icon: 'palette', color: 'var(--cre-color)' }
-    };
 
     // Calculate next level EXP requirement for each attribute
     const getNextLevelExp = (currentLevel: number) => {
@@ -94,47 +86,116 @@ function StatsOverview({ attributes, achievements, projectEvents = [], events = 
           <div className="md:col-span-2">
             <h3 className="text-lg font-semibold mb-4">你的人生属性概览</h3>
             <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-3 gap-4">
-              {Object.entries(attributes).map(([key, attr]) => {
-                const config = attributeConfig[key];
+              {ATTRIBUTE_KEYS.map((key) => {
+                const attr = attributes[key];
+                const config = ATTRIBUTE_CONFIG[key];
                 const expPercentage = getProgressToNextLevel(attr.exp, attr.level);
                 const nextLevelExp = getExpForLevel(attr.level + 1);
                 const currentLevelExp = getExpForLevel(attr.level);
-                const expToNext = nextLevelExp - currentLevelExp;
-                const currentExpInLevel = attr.exp - currentLevelExp;
                 
                 return (
                   <div key={key} className="text-center">
-                    <div className="relative w-16 h-16 mx-auto mb-2">
-                      <div className="absolute inset-0 rounded-full bg-gray-200"></div>
+                    <div className="relative mb-2">
                       <div 
-                        className="absolute inset-0 rounded-full transition-all duration-500"
-                        style={{
-                          background: `conic-gradient(${config.color} ${expPercentage}%, transparent ${expPercentage}%)`
-                        }}
-                      ></div>
-                      <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold" style={{ color: config.color }}>
+                        className="w-16 h-16 mx-auto rounded-full flex items-center justify-center relative"
+                        style={{ backgroundColor: `${config.color}15` }}
+                      >
+                        <div 
+                          className={`icon-${config.icon} text-2xl`}
+                          style={{ color: config.color }}
+                        >
+                          {/* Icon would go here */}
+                        </div>
+                        <div 
+                          className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                          style={{ backgroundColor: config.color }}
+                        >
                           {attr.level}
-                        </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-xs font-medium text-[var(--text-secondary)]">
-                      {config.name}
-                    </div>
-                    <div className="text-xs text-[var(--text-secondary)] mt-1 hidden sm:block">
-                      {currentExpInLevel}/{expToNext} EXP
+                    <h4 className="font-medium text-gray-900 text-sm">{config.name}</h4>
+                    <p className="text-xs text-gray-500">{attr.exp} EXP</p>
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                      <div 
+                        className="h-1 rounded-full" 
+                        style={{ 
+                          width: `${expPercentage}%`,
+                          backgroundColor: config.color
+                        }}
+                      ></div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+            
+            {/* Simple radar chart */}
+            <div className="mt-6">
+              <h4 className="font-medium text-gray-900 mb-2">能力分布图</h4>
+              <div className="flex justify-center">
+                <div className="relative w-48 h-48">
+                  {/* Radar chart background */}
+                  <div className="absolute inset-0 rounded-full border border-gray-200"></div>
+                  <div className="absolute inset-4 rounded-full border border-gray-200"></div>
+                  <div className="absolute inset-8 rounded-full border border-gray-200"></div>
+                  <div className="absolute inset-12 rounded-full border border-gray-200"></div>
+                  <div className="absolute inset-16 rounded-full border border-gray-200"></div>
+                  
+                  {/* Radar chart data */}
+                  <svg className="absolute inset-0 w-full h-full">
+                    <polygon
+                      points={
+                        ATTRIBUTE_KEYS.map((key, index) => {
+                        const attr = attributes[key];
+                        const angle = (index * 2 * Math.PI) / ATTRIBUTE_KEYS.length - Math.PI / 2;
+                        const radius = (attr.level / maxLevel) * 45; // Scale to fit in the circle
+                        const x = 50 + radius * Math.cos(angle);
+                        const y = 50 + radius * Math.sin(angle);
+                        return `${x}% ${y}%`;
+                      }).join(', ')
+                      }
+                      fill="rgba(59, 130, 246, 0.2)"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                  
+                  {/* Labels */}
+                  {ATTRIBUTE_KEYS.map((key, index) => {
+                    const config = ATTRIBUTE_CONFIG[key];
+                    const angle = (index * 2 * Math.PI) / ATTRIBUTE_KEYS.length - Math.PI / 2;
+                    const x = 50 + 50 * Math.cos(angle);
+                    const y = 50 + 50 * Math.sin(angle);
+                    
+                    return (
+                      <div
+                        key={key}
+                        className="absolute text-xs font-medium text-gray-700"
+                        style={{
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          transform: 'translate(-50%, -50%)'
+                        }}
+                      >
+                        {config.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     );
   } catch (error) {
-    console.error('StatsOverview component error:', error);
-    return null;
+    console.error('StatsOverview render error:', error);
+    return (
+      <div className="card">
+        <div className="text-red-500">数据加载出错</div>
+      </div>
+    );
   }
 }
 
