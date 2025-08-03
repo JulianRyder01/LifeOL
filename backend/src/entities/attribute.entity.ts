@@ -10,7 +10,7 @@ export class Attribute {
   userId: string;
 
   @Column()
-  attribute: string; // int, str, vit, cha, eq, cre
+  attribute: string; // int, phy, wil, cha, men, cre
 
   @Column()
   level: number;

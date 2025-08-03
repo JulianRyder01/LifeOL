@@ -4,11 +4,11 @@ export interface Attribute {
 }
 
 export interface Attributes {
-  int: Attribute; // 智力
-  str: Attribute; // 体魄
-  vit: Attribute; // 精力
-  cha: Attribute; // 社交
-  eq: Attribute;  // 情感
+  int: Attribute; // 智识
+  phy: Attribute; // 体魄
+  wil: Attribute; // 意志
+  cha: Attribute; // 魅力
+  men: Attribute; // 心境
   cre: Attribute; // 创造
 }
 

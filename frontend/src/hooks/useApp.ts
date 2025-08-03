@@ -18,7 +18,7 @@ import {
   checkAchievements, 
   saveAchievements, 
   loadAchievements, 
-  getInitialAchievements, 
+  INITIAL_ACHIEVEMENTS, 
   checkAttributeDecay 
 } from '../utils/achievements';
 import { saveUserConfig, loadUserConfig, getInitialUserConfig } from '../utils/userConfig';
@@ -33,7 +33,7 @@ export const useApp = () => {
   });
   
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    return loadAchievements() || getInitialAchievements();
+    return loadAchievements() || INITIAL_ACHIEVEMENTS;
   });
 
   // State for items (道具系统)

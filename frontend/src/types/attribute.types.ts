@@ -16,29 +16,29 @@ export interface Attribute {
 
 export interface Attributes {
   /**
-   * 智力 (INTelligence)
+   * 智识 (INTelligence)
    */
   int: Attribute;
   
   /**
-   * 体魄 (STRength)
+   * 体魄 (PHYsique)
    */
-  str: Attribute;
+  phy: Attribute;
   
   /**
-   * 精力 (VITality)
+   * 意志 (WILlpower)
    */
-  vit: Attribute;
+  wil: Attribute;
   
   /**
-   * 社交 (CHArisma)
+   * 魅力 (CHArisma)
    */
   cha: Attribute;
   
   /**
-   * 情感 (Emotional Quotient)
+   * 心境 (MENtality)
    */
-  eq: Attribute;
+  men: Attribute;
   
   /**
    * 创造 (CREativity)
@@ -62,31 +62,31 @@ export interface AttributeConfig {
 export const ATTRIBUTE_CONFIG: Record<keyof Attributes, AttributeConfig> = {
   int: {
     key: 'int',
-    name: '智力',
+    name: '智识',
     icon: 'book-open',
     color: 'var(--int-color)'
   },
-  str: {
-    key: 'str',
+  phy: {
+    key: 'phy',
     name: '体魄',
     icon: 'dumbbell',
     color: 'var(--str-color)'
   },
-  vit: {
-    key: 'vit',
-    name: '精力',
+  wil: {
+    key: 'wil',
+    name: '意志',
     icon: 'battery',
     color: 'var(--vit-color)'
   },
   cha: {
     key: 'cha',
-    name: '社交',
+    name: '魅力',
     icon: 'users',
     color: 'var(--cha-color)'
   },
-  eq: {
-    key: 'eq',
-    name: '情感',
+  men: {
+    key: 'men',
+    name: '心境',
     icon: 'heart',
     color: 'var(--eq-color)'
   },
@@ -101,7 +101,7 @@ export const ATTRIBUTE_CONFIG: Record<keyof Attributes, AttributeConfig> = {
 /**
  * 属性类型列表，便于遍历所有属性
  */
-export const ATTRIBUTE_KEYS: (keyof Attributes)[] = ['int', 'str', 'vit', 'cha', 'eq', 'cre'];
+export const ATTRIBUTE_KEYS: (keyof Attributes)[] = ['int', 'phy', 'wil', 'cha', 'men', 'cre'];
 
 /**
  * 获取属性的显示名称

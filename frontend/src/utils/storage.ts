@@ -48,10 +48,10 @@ function loadEvents(): Event[] | null {
 function getInitialAttributes(): Attributes {
   return {
     int: { level: 1, exp: 0 },
-    str: { level: 1, exp: 0 },
-    vit: { level: 1, exp: 0 },
+    phy: { level: 1, exp: 0 },
+    wil: { level: 1, exp: 0 },
     cha: { level: 1, exp: 0 },
-    eq: { level: 1, exp: 0 },
+    men: { level: 1, exp: 0 },
     cre: { level: 1, exp: 0 }
   };
 }
@@ -125,44 +125,9 @@ function loadProjectEvents(): ProjectEvent[] | null {
   }
 }
 
-// Get initial project events with sample project
+// Get initial project events
 function getInitialProjectEvents(): ProjectEvent[] {
-  return [
-    {
-      id: 'sample-project-1',
-      title: '熟悉LifeOL的使用',
-      description: '慢慢熟悉使用吧~随着渐渐熟悉，可以点击下方各种按钮让进度达到100%，或点击"标记完成"来直接完成这个任务哦！',
-      progress: 0,
-      createdAt: new Date().toISOString()
-    }
-  ];
-}
-
-interface ConsumableUsage {
-  [itemId: string]: {
-    usedCount: number;
-    lastUsedTime: number;
-  };
-}
-
-// Save consumable usage to localStorage
-function saveConsumableUsage(usage: ConsumableUsage): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.CONSUMABLE_USAGE, JSON.stringify(usage));
-  } catch (error) {
-    console.error('Failed to save consumable usage:', error);
-  }
-}
-
-// Load consumable usage from localStorage
-function loadConsumableUsage(): ConsumableUsage | null {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.CONSUMABLE_USAGE);
-    return stored ? JSON.parse(stored) : null;
-  } catch (error) {
-    console.error('Failed to load consumable usage:', error);
-    return null;
-  }
+  return [];
 }
 
 export {
@@ -171,12 +136,10 @@ export {
   getInitialAttributes,
   saveEvents,
   loadEvents,
-  getInitialItems,
   saveItems,
   loadItems,
+  getInitialItems,
   saveProjectEvents,
   loadProjectEvents,
-  getInitialProjectEvents,
-  saveConsumableUsage,
-  loadConsumableUsage
+  getInitialProjectEvents
 };
