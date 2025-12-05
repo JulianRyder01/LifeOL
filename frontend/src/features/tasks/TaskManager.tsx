@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ProjectEvent, Item, ProjectEventProgressLog, ProgressButtonConfig } from '../types/app.types';
+import { ProjectEvent, Item, ProgressButtonConfig } from '../../types/app.types';
 
 // AnimatedNumber component for smooth number transitions
 const AnimatedNumber = ({ value, className }: { value: number; className?: string }) => {
@@ -60,8 +60,6 @@ const attributeConfig: Record<string, { name: string; icon: string; color: strin
 
 function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectEvent, onCompleteProjectEvent, onDeleteProjectEvent, onResetProjectEvent, onEditProjectEvent, attributeNames = {} }: TaskManagerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showCompleteConfirm, setShowCompleteConfirm] = useState<{ id: string; title: string } | null>(null);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [progressChangeReason, setProgressChangeReason] = useState<Record<string, string>>({});
@@ -73,7 +71,7 @@ function TaskManager({ projectEvents, items, onAddProjectEvent, onUpdateProjectE
   const [newProjectEvent, setNewProjectEvent] = useState({
     title: '',
     description: '',
-    useMarkdown: false, // 添加Markdown支持选项
+    useMarkdown: false,
     progress: 0,
     attributeRewards: {} as Record<string, number>,
     itemRewards: [] as string[],

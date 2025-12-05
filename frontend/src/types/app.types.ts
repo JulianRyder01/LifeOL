@@ -18,8 +18,8 @@ export interface Event {
   description: string;
   timestamp: string;
   expGains: Record<string, number>;
-  useMarkdown?: boolean; // 添加Markdown支持选项
-  relatedItemId?: string; // 添加关联道具ID字段
+  useMarkdown?: boolean;
+  relatedItemId?: string;
 }
 
 // TODO: Add support for long-term events with progress tracking
@@ -43,9 +43,15 @@ export interface ProjectEvent {
   itemRewards?: string[];
   createdAt: string;
   completedAt?: string;
-  progressLog?: ProjectEventProgressLog[]; // 进度变更记录
-  customProgressButtons?: ProgressButtonConfig[]; // 自定义进度按钮
-  useMarkdown?: boolean; // 添加Markdown支持选项
+  progressLog?: ProjectEventProgressLog[];
+  customProgressButtons?: ProgressButtonConfig[];
+  useMarkdown?: boolean;
+}
+
+export interface ItemEffect {
+  attribute: keyof Attributes;
+  type: 'fixed' | 'percentage';
+  value: number;
 }
 
 export interface Item {
@@ -57,13 +63,7 @@ export interface Item {
   effects?: ItemEffect[];
   createdAt: string;
   used?: boolean;
-  usedAt?: string; // 添加使用时间字段
-}
-
-export interface ItemEffect {
-  attribute: keyof Attributes; // Which attribute this affects
-  type: 'fixed' | 'percentage'; // Fixed value or percentage boost
-  value: number; // The value of the effect
+  usedAt?: string;
 }
 
 export interface Achievement {
@@ -87,6 +87,11 @@ export interface Achievement {
   useMarkdown?: boolean;
 }
 
+export interface UserConfig {
+  username: string;
+  avatar: string;
+}
+
 export interface AttributeConfig {
   name: string;
   icon: string;
@@ -105,7 +110,56 @@ export interface DecayWarning {
   daysUntilDecay?: number;
 }
 
-export interface UserConfig {
-  username: string;
-  avatar: string;
+// 定义 Context 类型，解决 TS2739 和 TS2339 错误
+export interface AppContextType {
+  // States
+  attributes: Attributes;
+  events: Event[];
+  achievements: Achievement[];
+  items: Item[];
+  projectEvents: ProjectEvent[];
+  selectedTitles: string[];
+  userConfig: UserConfig;
+  showFirstTimeGuide: boolean;
+  showEventModal: boolean;
+  setShowEventModal: (show: boolean) => void;
+  showAchievementModal: boolean;
+  setShowAchievementModal: (show: boolean) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  showUseItemModal: boolean;
+  setShowUseItemModal: (show: boolean) => void;
+  itemToUse: Item | null;
+  setItemToUse: (item: Item | null) => void;
+  showAllActivities: boolean;
+  setShowAllActivities: (show: boolean) => void;
+  
+  // Functions
+  handleAddEvent: (eventData: { title: string; description: string; expGains: Record<string, number> }) => void;
+  handleDeleteEvent: (id: string) => void;
+  handleUpdateEvent: (id: string, updatedEvent: Partial<Event>) => void;
+  handleAddItem: (itemData: Omit<Item, 'id' | 'createdAt'>) => void;
+  handleUseItem: (item: Item) => void;
+  confirmUseItem: () => void;
+  undoUseItem: (itemId: string) => void;
+  handleUpdateItem: (id: string, updates: Partial<Omit<Item, 'id' | 'createdAt' | 'used'>>) => void;
+  handleTitleChange: (titleIds: string[]) => void;
+  handleAddProjectEvent: (projectEventData: Omit<ProjectEvent, 'id' | 'createdAt'>) => void;
+  handleEditProjectEvent: (id: string, updates: Partial<ProjectEvent>) => void;
+  handleUpdateProjectEvent: (id: string, progress: number, reason?: string) => void;
+  handleCompleteProjectEvent: (id: string) => void;
+  handleResetProjectEvent: (id: string) => void;
+  handleDeleteProjectEvent: (id: string) => void;
+  getRecentActivities: () => (Event & { type: string })[];
+  formatActivityTime: (timestamp: string) => string;
+  handleAddCustomAchievement: (achievementData: Partial<Achievement>) => void;
+  handleAddCustomTitle: (titleData: Partial<Achievement>) => void;
+  handleAddCustomBadge: (badgeData: Partial<Achievement>) => void;
+  createCustomCondition: (triggerType: string, condition: string) => (attributes: Attributes, events: Event[]) => boolean;
+  handleUserConfigChange: (newConfig: UserConfig) => void;
+  attributeNames: Record<string, string>;
+  
+  // 新增缺失的方法定义
+  handleImportData: (file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => void;
+  handleResetData: () => void;
 }

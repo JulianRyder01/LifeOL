@@ -6,6 +6,8 @@ import AchievementModal from './components/AchievementModal';
 import DailyExpHeatmap from './components/DailyExpHeatmap';
 import { useApp } from './hooks/useApp';
 import { AppProvider } from './contexts/AppContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Lazy load components that are not immediately needed
 const LazyEventManager = lazy(() => import('./features/events/EventManager'));

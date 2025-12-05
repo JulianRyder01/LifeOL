@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ProjectEvent, Item } from '../types/app.types';
+import { ProjectEvent, Item } from '../../types/app.types';
 
 interface ProjectEventManagerProps {
   projectEvents: ProjectEvent[];

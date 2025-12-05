@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Item, ItemEffect } from '../types/app.types';
+import { Item, ItemEffect } from '../../types/app.types';
 
 interface ItemSystemProps {
   items: Item[];

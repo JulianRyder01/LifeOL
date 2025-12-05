@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { toast } from 'react-toastify'; // 修复：导入 toast
 import { Attributes, Event, Achievement, Item, ProjectEvent, UserConfig } from '../types/app.types';
 import { 
   saveAttributes, 
@@ -22,13 +23,11 @@ import {
   checkAttributeDecay 
 } from '../utils/achievements';
 import { saveUserConfig, loadUserConfig, getInitialUserConfig, resetUserData } from '../utils/userConfig';
-// [修改开始] 引入数据导入工具
 import { importUserDataFromFile } from '../utils/dataImportExport';
-// [修改结束]
 
 export const useApp = () => {
-  // Attribute names mapping
-  const attributeNames: Record<string, string> = {
+  // 修复：属性名称映射只定义一次
+  const attributeNamesMap: Record<string, string> = {
     'int': '智力',
     'str': '体魄',
     'vit': '精力',
@@ -173,7 +172,7 @@ export const useApp = () => {
         
         warnings.forEach((warning: any) => {
           decayEvent.expGains[warning.attribute] = -warning.decayAmount;
-          toast.warn(`您的${attributeNames[warning.attribute]}属性因长期未使用，已衰减${warning.decayAmount}点经验值`);
+          toast.warn(`您的${attributeNamesMap[warning.attribute]}属性因长期未使用，已衰减${warning.decayAmount}点经验值`);
         });
         
         setEvents(prev => [decayEvent, ...prev]);
@@ -214,7 +213,7 @@ export const useApp = () => {
     let hasAttributeChanges = false;
     
     Object.entries(eventData.expGains).forEach(([attr, exp]) => {
-      if (exp > 0 && attr in updatedAttributes) {
+      if (exp !== 0 && attr in updatedAttributes) {
         hasAttributeChanges = true;
         updatedAttributes[attr as keyof Attributes] = {
           ...updatedAttributes[attr as keyof Attributes],
@@ -275,64 +274,9 @@ export const useApp = () => {
 
   // Use a consumable item
   const handleUseItem = useCallback((item: Item) => {
-    // Mark item as used with timestamp
-    const updatedItems = items.map(i => 
-      i.id === item.id ? { ...i, used: true, usedAt: new Date().toISOString() } : i
-    );
-    setItems(updatedItems);
-    
-    // Apply item effects to attributes
-    if (item.effects && item.effects.length > 0) {
-      const updatedAttributes = { ...attributes };
-      let hasChanges = false;
-      
-      item.effects.forEach(effect => {
-        if (effect.attribute in updatedAttributes) {
-          hasChanges = true;
-          const currentExp = updatedAttributes[effect.attribute as keyof Attributes].exp;
-          const expGain = effect.type === 'fixed' 
-            ? effect.value 
-            : Math.floor(currentExp * (effect.value / 100));
-        
-          updatedAttributes[effect.attribute as keyof Attributes] = {
-              ...updatedAttributes[effect.attribute as keyof Attributes],
-              exp: currentExp + expGain,
-              level: calculateLevel(currentExp + expGain)
-          };
-        }
-      });
-      
-      if (hasChanges) {
-        setAttributes(updatedAttributes);
-        
-        // Check for new achievements
-        const newAchievements = checkAchievements(updatedAttributes, events, achievements);
-        if (newAchievements.length > 0) {
-          setAchievements(prev => [...prev, ...newAchievements]);
-        }
-      }
-    }
-    
-    // Create event for using item
-    const useEvent: Event = {
-      id: Date.now().toString(),
-      title: `使用道具: ${item.name}`,
-      description: item.description || `使用了 ${item.name}`,
-      timestamp: new Date().toISOString(),
-      expGains: item.effects?.reduce((acc, effect) => {
-        acc[effect.attribute] = effect.type === 'fixed' 
-          ? effect.value 
-                    : Math.floor(attributes[effect.attribute as keyof Attributes].exp * (effect.value / 100));
-        return acc;
-      }, {} as Record<string, number>) || {},
-      relatedItemId: item.id
-    };
-    
-    setEvents(prev => [useEvent, ...prev]);
-    
-    // Show success notification
-    toast.success(`道具"${item.name}"使用成功！`);
-  }, [attributes, events, achievements]);
+    setItemToUse(item);
+    setShowUseItemModal(true);
+  }, []);
 
   // Confirm using a consumable item
   const confirmUseItem = useCallback(() => {
@@ -377,8 +321,9 @@ export const useApp = () => {
           id: Date.now().toString(),
           title: `使用道具: ${itemToUse.name}`,
           description: `使用了 ${itemToUse.name}，效果: ${effectDescriptions}`,
-          expGains: {}, // No direct EXP gains, effects are applied separately
-          timestamp: new Date().toISOString()
+          expGains: {}, 
+          timestamp: new Date().toISOString(),
+          relatedItemId: itemToUse.id
         };
         
         setEvents(prev => [useEvent, ...prev]);
@@ -391,6 +336,7 @@ export const useApp = () => {
       }
     }
     
+    toast.success(`道具"${itemToUse.name}"使用成功！`);
     setShowUseItemModal(false);
     setItemToUse(null);
   }, [itemToUse, items, attributes, events, achievements]);
@@ -448,6 +394,7 @@ export const useApp = () => {
             item.id === itemId ? { ...item, used: false, usedAt: undefined } : item
     );
     setItems(updatedItems);
+    toast.success('已撤销道具使用');
   }, [attributes, events, items]);
 
   // Handle item updates
@@ -507,7 +454,7 @@ export const useApp = () => {
             progressLog: event.progressLog 
               ? [...event.progressLog, newLogEntry] 
               : [newLogEntry]
-          } as ProjectEvent & { progressLog: { change: number; reason: string; timestamp: string }[] };
+          } as ProjectEvent;
         }
         return event;
       })
@@ -569,8 +516,8 @@ export const useApp = () => {
           ? { 
               ...event, 
               progress: 0,
-                        completedAt: undefined, // Make sure to reset completedAt
-              progressLog: [] // Clear progress log when resetting
+              completedAt: undefined,
+              progressLog: []
             } 
         : event
       )
@@ -582,9 +529,7 @@ export const useApp = () => {
     setProjectEvents(prev => prev.filter(event => event.id !== id));
   }, []);
 
-  // Filter events to show in "Recent Activities"
-  const getRecentActivities = () => {
-    // Get regular events
+  const getRecentActivities = useCallback(() => {
         const regularEvents = [...events].map(e => ({ ...e, type: 'event' }));
     
     // Get task completion events
@@ -627,7 +572,7 @@ export const useApp = () => {
     return allEvents.sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  };
+  }, [events, projectEvents, achievements, items]);
 
   // Format time for recent activities
   const formatActivityTime = useCallback((timestamp: string) => {
@@ -753,9 +698,10 @@ export const useApp = () => {
   // Handle user config change
   const handleUserConfigChange = useCallback((newConfig: UserConfig) => {
     setUserConfig(newConfig);
-  }, []); // <--- 注意这里：加了逗号、空数组、右括号
-    // [修改开始] 添加数据导入和重置的处理函数
-    const handleImportData = (file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => {
+  }, []);
+
+  // 新增：导入数据逻辑
+  const handleImportData = useCallback((file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => {
         if (window.confirm('导入数据将会覆盖您当前的所有本地数据，确定要继续吗？')) {
             importUserDataFromFile(file, (success) => {
                 if (success) {
@@ -769,26 +715,16 @@ export const useApp = () => {
                 }
             });
         }
-    };
+  }, []);
 
-    const handleResetData = () => {
+  // 新增：重置数据逻辑
+  const handleResetData = useCallback(() => {
         if (window.confirm('警告：此操作将清除所有本地数据并重置应用，且无法撤销。您确定要重开人生吗？')) {
             resetUserData();
             // 在 utils/userConfig.ts 中已移除 reload，此处执行以确保状态刷新
             window.location.reload();
         }
-    };
-    // [修改结束]
-
-  // 属性名称映射
-  const attributeNames: Record<string, string> = {
-    int: '智识',
-    phy: '体魄',
-    wil: '意志',
-    cha: '魅力',
-    men: '心境',
-    cre: '创造'
-  };
+  }, []);
 
   return {
     // States
@@ -836,6 +772,8 @@ export const useApp = () => {
     handleAddCustomBadge,
     createCustomCondition,
     handleUserConfigChange,
-    attributeNames
+    attributeNames: attributeNamesMap,
+    handleImportData,
+    handleResetData
   };
 };

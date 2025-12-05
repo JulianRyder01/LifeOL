@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Event } from '../types/app.types';
+import { Event } from '../../types/app.types';
 
 interface EventManagerProps {
   events: Event[];
@@ -182,8 +182,8 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
                               {isMonthExpanded && (
                                 <div className="mt-3 space-y-3 ml-4">
                                   {groupedEvents[yearNum][monthNum]
-                                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                                    .map(event => (
+                                    .sort((a: Event, b: Event) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                                    .map((event: Event) => (
                                       <div 
                                         key={event.id} 
                                         className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -235,7 +235,7 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
                                             
                                             <div className="flex flex-wrap gap-2 mb-3">
                                               {Object.entries(event.expGains)
-                                                .filter(([_, exp]) => exp > 0)
+                                                .filter(([_, exp]) => (exp as number) > 0)
                                                 .map(([attr, exp]) => {
                                                   const config = attributeConfig[attr] || { 
                                                     name: getAttributeName(attr), 
@@ -252,7 +252,7 @@ function EventManager({ events, onDeleteEvent, onUpdateEvent, attributeNames = {
                                                       }}
                                                     >
                                                       <div className={`icon-${config.icon} text-xs`}></div>
-                                                      <span>+{exp}</span>
+                                                      <span>+{exp as number}</span>
                                                     </div>
                                                   );
                                                 })}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserConfig } from '../types/app.types';
-import { saveUserConfig } from '../utils/userConfig';
-import { downloadUserData } from '../utils/dataImportExport';
+import { UserConfig } from '../../types/app.types';
+import { saveUserConfig } from '../../utils/userConfig';
+import { downloadUserData } from '../../utils/dataImportExport';
 
 interface UserSettingsProps {
   userConfig: UserConfig;

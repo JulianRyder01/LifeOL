@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserConfig } from '../../types/app.types';
-import { loadUserConfig, getInitialUserConfig, saveUserConfig } from '../../utils/storage';
+import { loadUserConfig, getInitialUserConfig, saveUserConfig } from '../../utils/userConfig';
 
 export const useUser = () => {
   const [userConfig, setUserConfig] = useState<UserConfig>(() => {

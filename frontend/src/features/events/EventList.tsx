@@ -1,5 +1,5 @@
 import React from 'react';
-import { Event } from '../types/app.types';
+import { Event } from '../../types/app.types';
 
 interface AttributeConfig {
   name: string;
@@ -94,14 +94,14 @@ function EventList({ events }: EventListProps) {
                 </div>
                 
                 {event.description && (
-                  <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">
+                  <div className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">
                     {renderDescription(event.description, (event as any).useMarkdown)}
-                  </p>
+                  </div>
                 )}
                 
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(event.expGains)
-                    .filter(([_, exp]) => exp > 0)
+                    .filter(([_, exp]) => (exp as number) > 0)
                     .map(([attr, exp]) => {
                       const config = attributeConfig[attr];
                       if (!config) return null;
@@ -115,7 +115,7 @@ function EventList({ events }: EventListProps) {
                         }}
                       >
                           <div className={`icon-${config.icon} text-xs`}></div>
-                        <span className="text-xs">+{exp}</span>
+                        <span className="text-xs">+{exp as number}</span>
                       </div>
                       );
                     })}

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Achievement } from '../../types/app.types';
-import { loadAchievements, getInitialAchievements, saveAchievements } from '../../utils/storage';
-import { checkAchievements as checkAchievementsUtil } from '../../utils/achievements';
+import { loadAchievements, saveAchievements } from '../../utils/storage';
+import { checkAchievements as checkAchievementsUtil, INITIAL_ACHIEVEMENTS } from '../../utils/achievements';
 
 export const useAchievements = () => {
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    return loadAchievements() || getInitialAchievements();
+    return loadAchievements() || INITIAL_ACHIEVEMENTS;
   });
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export const useAchievements = () => {
       isTitle: achievementData.isTitle || false,
       attributeRequirement: achievementData.attributeRequirement,
       levelRequirement: achievementData.levelRequirement,
-      ...(achievementData as any).useMarkdown !== undefined && { useMarkdown: (achievementData as any).useMarkdown }
+      ...(achievementData.useMarkdown !== undefined && { useMarkdown: achievementData.useMarkdown })
     };
     
     setAchievements(prev => [...prev, newAchievement]);
@@ -56,7 +56,7 @@ export const useAchievements = () => {
       target: titleData.target,
       attributeRequirement: titleData.attributeRequirement,
       levelRequirement: titleData.levelRequirement,
-      ...(titleData as any).useMarkdown !== undefined && { useMarkdown: (titleData as any).useMarkdown }
+      ...(titleData.useMarkdown !== undefined && { useMarkdown: titleData.useMarkdown })
     };
     
     setAchievements(prev => [...prev, newTitle]);
@@ -77,7 +77,7 @@ export const useAchievements = () => {
       target: badgeData.target,
       attributeRequirement: badgeData.attributeRequirement,
       levelRequirement: badgeData.levelRequirement,
-      ...(badgeData as any).useMarkdown !== undefined && { useMarkdown: (badgeData as any).useMarkdown }
+      ...(badgeData.useMarkdown !== undefined && { useMarkdown: badgeData.useMarkdown })
     };
     
     setAchievements(prev => [...prev, newBadge]);

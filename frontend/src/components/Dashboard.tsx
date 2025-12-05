@@ -1,6 +1,7 @@
 import React from 'react';
 import StatsOverview from './StatsOverview';
-import TaskManager from './TaskManager';
+// 修复引用路径：TaskManager 在 features/tasks 中
+import TaskManager from '../features/tasks/TaskManager';
 import DailyExpHeatmap from './DailyExpHeatmap';
 import { Attributes, Event, Achievement, Item, ProjectEvent } from '../types/app.types';
 
