@@ -5,7 +5,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/your-username/life-online/pulls)
 
 **将生活游戏化，让每一次努力都有迹可循，让每一份成长都清晰可见。**
-![alt text](image.png)
+![alt text](./image.png)
 ---
 # 启动方式
 1.安装依赖:
