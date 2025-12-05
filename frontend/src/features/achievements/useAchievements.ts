@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Achievement } from '../../types/app.types';
-import { loadAchievements, saveAchievements } from '../../utils/storage';
+import { loadAchievements, saveAchievements } from '../../utils/achievements';
 import { checkAchievements as checkAchievementsUtil, INITIAL_ACHIEVEMENTS } from '../../utils/achievements';
 
 export const useAchievements = () => {

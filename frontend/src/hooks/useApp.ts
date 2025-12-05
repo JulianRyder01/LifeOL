@@ -314,7 +314,7 @@ export const useApp = () => {
         
         // Create event for using the item
         const effectDescriptions = itemToUse.effects?.map(effect => 
-                    `${attributeNames[effect.attribute] || effect.attribute}: +${effect.type === 'fixed' ? effect.value : effect.value + '%'}`
+                    `${attributeNamesMap[effect.attribute] || effect.attribute}: +${effect.type === 'fixed' ? effect.value : effect.value + '%'}`
         ).join(', ') || '';
         
         const useEvent: Event = {
