@@ -31,18 +31,13 @@ function loadUserConfig(): UserConfig | null {
 
 // Reset all user data
 function resetUserData(): void {
+  // [修改开始] 将刷新页面的逻辑移出，交由调用方处理，使函数职责更单一
   // Clear all stored data
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ATTRIBUTES);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.EVENTS);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ACHIEVEMENTS);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ITEMS);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.PROJECT_EVENTS);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.CONSUMABLE_USAGE);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SELECTED_TITLES);
-  localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.USER_CONFIG);
-  
-  // Reload the page to reflect changes
-  window.location.reload();
+  Object.values(APP_CONFIG.STORAGE_KEYS).forEach(key => {
+    localStorage.removeItem(key);
+  });
+  // The page reload will be handled by the caller hook
+  // [修改结束]
 }
 
 export {

@@ -1,13 +1,17 @@
 {
   "name": "lifeol-frontend",
-  "version": "1.3.7",
+  "version": "1.5.1",
   "description": "人生Online前端 - 将生活游戏化",
   "main": "index.js",
+  "type": "module",
   "private": true,
+  "homepage": "https://julianryder01.github.io/LifeOL/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [
     "life-game",
@@ -19,9 +23,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourname/lifeol.git"
+    "url": "https://github.com/julianryder01/lifeol.git"
   },
-  "author": "LifeOL Team",
+  "author": "Julian Ryder",
   "license": "MIT",
   "engines": {
     "node": "^18.0.0 || ^20.0.0 || ^22.0.0",
@@ -30,12 +34,18 @@
   "devDependencies": {
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "@vitejs/plugin-react": "^4.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.19",
+    "gh-pages": "^6.1.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.0.0",
     "vite": "^4.0.0"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "react-toastify": "^11.0.5"
   }
 }

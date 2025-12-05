@@ -200,7 +200,7 @@ function AppContent() {
                     
                     {appContextValue.getRecentActivities().slice(0, 6).length > 0 ? (
                       <div className="space-y-4">
-                        {appContextValue.getRecentActivities().slice(0, 6).map(event => (
+                        {appContextValue.getRecentActivities().slice(0, 6).map((event: any) => (
                           <div key={event.id} className="border border-gray-200 rounded-lg p-3 sm:p-4">
                             <div className="flex justify-between flex-wrap">
                               <h3 className="font-medium text-gray-900 text-sm sm:text-base">{event.title}</h3>
@@ -213,10 +213,10 @@ function AppContent() {
                                 {event.description}
                               </p>
                             )}
-                            {event.expGains && Object.entries(event.expGains).some(([_, exp]) => exp > 0) && (
+                            {event.expGains && Object.entries(event.expGains).some(([_, exp]) => (exp as number) > 0) && (
                               <div className="mt-2 flex flex-wrap gap-1">
                                 {Object.entries(event.expGains).map(([attr, exp]) => 
-                                  exp > 0 ? (
+                                  (exp as number) > 0 ? (
                                     <span 
                                       key={attr} 
                                       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -227,7 +227,7 @@ function AppContent() {
                                       {attr === 'cha' && '👥'}
                                       {attr === 'men' && '❤️'}
                                       {attr === 'cre' && '🎨'}
-                                      <span className="hidden sm:inline ml-1">{appContextValue.attributeNames[attr] || attr}</span>: +{exp} EXP
+                                      <span className="hidden sm:inline ml-1">{appContextValue.attributeNames[attr] || attr}</span>: +{exp as number} EXP
                                     </span>
                                   ) : null
                                 )}
@@ -334,6 +334,8 @@ function AppContent() {
                   userConfig={appContextValue.userConfig}
                   onUserConfigChange={appContextValue.handleUserConfigChange}
                   onBack={() => appContextValue.setActiveTab('dashboard')}
+                  onImportData={appContextValue.handleImportData}
+                  onResetData={appContextValue.handleResetData}
                 />
               </Suspense>
             </div>

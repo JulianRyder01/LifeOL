@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { UserConfig } from '../types/app.types';
-import { saveUserConfig, resetUserData } from '../utils/userConfig';
-import { downloadUserData, importUserDataFromFile } from '../utils/dataImportExport';
+import { saveUserConfig } from '../utils/userConfig';
+import { downloadUserData } from '../utils/dataImportExport';
 
 interface UserSettingsProps {
   userConfig: UserConfig;
   onUserConfigChange: (config: UserConfig) => void;
   onBack: () => void;
+    // [修改开始] 添加导入和重置的 props
+    onImportData: (file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => void;
+    onResetData: () => void;
+    // [修改结束]
 }
 
-function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsProps) {
+function UserSettings({ userConfig, onUserConfigChange, onBack, onImportData, onResetData }: UserSettingsProps) {
   const [username, setUsername] = useState(userConfig.username);
   const [avatar, setAvatar] = useState(userConfig.avatar);
   const [dontShowTaskCompleteConfirm, setDontShowTaskCompleteConfirm] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
+    // [修改开始] 移除了 showResetConfirm 状态，因为确认逻辑移到了 useApp hook 中
   const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
 
   useEffect(() => {
@@ -40,18 +44,9 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
   };
 
   const handleReset = () => {
-    setShowResetConfirm(true);
+        onResetData();
   };
 
-  const confirmReset = () => {
-    resetUserData();
-  };
-
-  const cancelReset = () => {
-    setShowResetConfirm(false);
-  };
-
-  // Handle data export
   const handleExportData = () => {
     try {
       downloadUserData();
@@ -68,18 +63,7 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
     const file = event.target.files?.[0];
     if (!file) return;
 
-    importUserDataFromFile(file, (success) => {
-      if (success) {
-        setImportStatus({ type: 'success', message: '数据导入成功！页面将自动刷新。' });
-        setTimeout(() => {
-          setImportStatus({ type: null, message: '' });
-          window.location.reload();
-        }, 2000);
-      } else {
-        setImportStatus({ type: 'error', message: '数据导入失败，请检查文件格式。' });
-        setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
-      }
-    });
+        onImportData(file, setImportStatus);
 
     // Reset file input
     event.target.value = '';
@@ -148,12 +132,10 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
                 </div>
                 <button
                   onClick={() => setDontShowTaskCompleteConfirm(!dontShowTaskCompleteConfirm)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                    dontShowTaskCompleteConfirm ? 'bg-blue-600' : 'bg-gray-200'
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${dontShowTaskCompleteConfirm ? 'bg-blue-600' : 'bg-gray-200'
                   }`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                    dontShowTaskCompleteConfirm ? 'translate-x-6' : 'translate-x-1'
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${dontShowTaskCompleteConfirm ? 'translate-x-6' : 'translate-x-1'
                   }`} />
                 </button>
               </div>
@@ -192,7 +174,7 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
             <h2 className="text-lg font-medium text-gray-900 mb-4">关于</h2>
             <div className="space-y-4">
               <button
-                onClick={() => {}}
+                                onClick={() => { }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
               >
                 关于开发者
@@ -222,34 +204,6 @@ function UserSettings({ userConfig, onUserConfigChange, onBack }: UserSettingsPr
             </button>
           </div>
         </div>
-
-        {/* 重置确认弹窗 */}
-        {showResetConfirm && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/3 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">确认重开人生</h3>
-                <p className="text-gray-500 mb-4">
-                  确定要重开人生吗？此操作将清除所有数据，包括属性、事件、成就、道具等。
-                </p>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={cancelReset}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    取消
-                  </button>
-                  <button
-                    onClick={confirmReset}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
-                  >
-                    确认重开
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
