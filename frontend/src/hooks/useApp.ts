@@ -753,8 +753,7 @@ export const useApp = () => {
   // Handle user config change
   const handleUserConfigChange = useCallback((newConfig: UserConfig) => {
     setUserConfig(newConfig);
-  };
-    
+  }, []); // <--- 注意这里：加了逗号、空数组、右括号
     // [修改开始] 添加数据导入和重置的处理函数
     const handleImportData = (file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => {
         if (window.confirm('导入数据将会覆盖您当前的所有本地数据，确定要继续吗？')) {
