@@ -13,21 +13,12 @@
     "backend"
   ],
   "scripts": {
-<<<<<<< HEAD
-    "install:frontend": "cd frontend && npm install",
-    "install:backend": "cd backend && npm install",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run start:dev",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build"
-=======
     "install:frontend": "npm install -w frontend",
     "install:backend": "npm install -w backend",
     "dev:frontend": "npm run dev -w frontend",
     "dev:backend": "npm run start:dev -w backend",
     "build:frontend": "npm run build -w frontend",
     "build:backend": "npm run build -w backend"
->>>>>>> temp
   },
   "keywords": [
     "life-game",

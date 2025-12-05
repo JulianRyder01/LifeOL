@@ -21,15 +21,10 @@ import {
   INITIAL_ACHIEVEMENTS, 
   checkAttributeDecay 
 } from '../utils/achievements';
-<<<<<<< HEAD
-import { saveUserConfig, loadUserConfig, getInitialUserConfig } from '../utils/userConfig';
-import { toast } from 'react-toastify';
-=======
 import { saveUserConfig, loadUserConfig, getInitialUserConfig, resetUserData } from '../utils/userConfig';
 // [修改开始] 引入数据导入工具
 import { importUserDataFromFile } from '../utils/dataImportExport';
 // [修改结束]
->>>>>>> temp
 
 export const useApp = () => {
   // Attribute names mapping
@@ -325,17 +320,9 @@ export const useApp = () => {
       description: item.description || `使用了 ${item.name}`,
       timestamp: new Date().toISOString(),
       expGains: item.effects?.reduce((acc, effect) => {
-<<<<<<< HEAD
-        if (effect.attribute in attributes) {
-          acc[effect.attribute] = effect.type === 'fixed' 
-            ? effect.value 
-            : Math.floor(attributes[effect.attribute].exp * (effect.value / 100));
-        }
-=======
         acc[effect.attribute] = effect.type === 'fixed' 
           ? effect.value 
                     : Math.floor(attributes[effect.attribute as keyof Attributes].exp * (effect.value / 100));
->>>>>>> temp
         return acc;
       }, {} as Record<string, number>) || {},
       relatedItemId: item.id
@@ -596,11 +583,6 @@ export const useApp = () => {
   }, []);
 
   // Filter events to show in "Recent Activities"
-<<<<<<< HEAD
-  const getRecentActivities = useCallback(() => {
-    return recentActivities;
-  }, [recentActivities]);
-=======
   const getRecentActivities = () => {
     // Get regular events
         const regularEvents = [...events].map(e => ({ ...e, type: 'event' }));
@@ -646,7 +628,6 @@ export const useApp = () => {
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   };
->>>>>>> temp
 
   // Format time for recent activities
   const formatActivityTime = useCallback((timestamp: string) => {
@@ -772,9 +753,6 @@ export const useApp = () => {
   // Handle user config change
   const handleUserConfigChange = useCallback((newConfig: UserConfig) => {
     setUserConfig(newConfig);
-<<<<<<< HEAD
-  }, []);
-=======
   };
     
     // [修改开始] 添加数据导入和重置的处理函数
@@ -812,7 +790,6 @@ export const useApp = () => {
     men: '心境',
     cre: '创造'
   };
->>>>>>> temp
 
   return {
     // States

@@ -3,11 +3,7 @@
 export default {
   content: [
     "./index.html",
-<<<<<<< HEAD
-    "./src/**/*.{js,ts,jsx,tsx}", 
-=======
     "./src/**/*.{js,ts,jsx,tsx}",
->>>>>>> temp
   ],
   theme: {
     extend: {
