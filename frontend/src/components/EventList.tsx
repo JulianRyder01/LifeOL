@@ -14,11 +14,11 @@ interface EventListProps {
 function EventList({ events }: EventListProps) {
   try {
     const attributeConfig: Record<string, AttributeConfig> = {
-      int: { name: '智力', icon: 'book-open', color: 'var(--int-color)' },
-      str: { name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
-      vit: { name: '精力', icon: 'battery', color: 'var(--vit-color)' },
-      cha: { name: '社交', icon: 'users', color: 'var(--cha-color)' },
-      eq: { name: '情感', icon: 'heart', color: 'var(--eq-color)' },
+      int: { name: '智识', icon: 'book-open', color: 'var(--int-color)' },
+      phy: { name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
+      wil: { name: '意志', icon: 'battery', color: 'var(--vit-color)' },
+      cha: { name: '魅力', icon: 'users', color: 'var(--cha-color)' },
+      men: { name: '心境', icon: 'heart', color: 'var(--eq-color)' },
       cre: { name: '创造', icon: 'palette', color: 'var(--cre-color)' }
     };
 
@@ -102,19 +102,23 @@ function EventList({ events }: EventListProps) {
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(event.expGains)
                     .filter(([_, exp]) => exp > 0)
-                    .map(([attr, exp]) => (
+                    .map(([attr, exp]) => {
+                      const config = attributeConfig[attr];
+                      if (!config) return null;
+                      return (
                       <div
                         key={attr}
                         className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
                         style={{ 
-                          backgroundColor: `${attributeConfig[attr].color}15`,
-                          color: attributeConfig[attr].color 
+                            backgroundColor: `${config.color}15`,
+                            color: config.color 
                         }}
                       >
-                        <div className={`icon-${attributeConfig[attr].icon} text-xs`}></div>
+                          <div className={`icon-${config.icon} text-xs`}></div>
                         <span className="text-xs">+{exp}</span>
                       </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </div>
             ))}

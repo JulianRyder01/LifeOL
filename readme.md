@@ -5,18 +5,39 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/your-username/life-online/pulls)
 
 **将生活游戏化，让每一次努力都有迹可循，让每一份成长都清晰可见。**
+![alt text](image.png)
+---
+# 启动方式
+1.安装依赖:
+在项目根目录下运行：
+```Bash
+npm install
+```
+这会安装根目录以及 workspaces (frontend/backend) 的所有依赖。
+启动前端:
+```Bash
+npm run dev:frontend
+```
+或者进入 frontend 目录运行 `npm run dev`  
+访问: http://localhost:3000 (或终端显示的端口)即可看到程序运行啦。
 
 ---
-
+# 项目介绍
 ### 目录 (Table of Contents)
 
 - [人生Online (Life Online)](#人生online-life-online)
+  - [](#)
+- [启动方式](#启动方式)
+- [项目介绍](#项目介绍)
     - [目录 (Table of Contents)](#目录-table-of-contents)
     - [🌟 项目愿景 (Project Vision)](#-项目愿景-project-vision)
     - [✨ 核心功能 (Core Features)](#-核心功能-core-features)
     - [🎨 设计理念 (Design Philosophy)](#-设计理念-design-philosophy)
     - [💻 技术栈 (Tech Stack)](#-技术栈-tech-stack)
     - [🏗️ 项目架构 (Project Architecture)](#️-项目架构-project-architecture)
+      - [前端架构](#前端架构)
+      - [后端架构](#后端架构)
+      - [数据流](#数据流)
     - [🚀 路线图 (Roadmap)](#-路线图-roadmap)
     - [🤝 如何贡献 (How to Contribute)](#-如何贡献-how-to-contribute)
     - [📝 许可证 (License)](#-许可证-license)

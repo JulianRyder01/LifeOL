@@ -82,10 +82,10 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
     // 计算各属性经验值增益
     const attributeGains: Record<string, number> = {
       int: 0,
-      str: 0,
-      vit: 0,
+      phy: 0,
+      wil: 0,
       cha: 0,
-      eq: 0,
+      men: 0,
       cre: 0
     };
 
@@ -118,7 +118,7 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
       ...ATTRIBUTE_KEYS.map((key) => {
         const config = ATTRIBUTE_CONFIG[key];
         return {
-          id: `${config.name.toLowerCase()}-enthusiast`,
+          id: `${config.name}-specialist`, // Use config.name to match SevenDaySummaryBadge logic
           title: `${config.name}爱好者`,
           description: `你在${config.name}方面表现出浓厚兴趣！`,
           icon: config.icon,
@@ -247,11 +247,11 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
   // Get attribute name by key
   const getAttributeName = (attrKey: string) => {
     const attributeNames: Record<string, string> = {
-      int: '智力',
-      str: '体魄',
-      vit: '精力',
-      cha: '社交',
-      eq: '情感',
+      int: '智识',
+      phy: '体魄',
+      wil: '意志',
+      cha: '魅力',
+      men: '心境',
       cre: '创造'
     };
     return attributeNames[attrKey] || attrKey;
@@ -873,9 +873,9 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
                           onChange={(e) => setNewAchievement({...newAchievement, triggerCondition: e.target.value + ':' + (newAchievement.triggerCondition.split(':')[1] || '5')})}
                           className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
-                          {['int', 'str', 'vit', 'cha', 'eq', 'cre'].map((attr) => (
+                          {['int', 'phy', 'wil', 'cha', 'men', 'cre'].map((attr) => (
                             <option key={attr} value={attr}>
-                              {{int: '智力', str: '体魄', vit: '精力', cha: '社交', eq: '情感', cre: '创造'}[attr]}
+                              {{int: '智识', phy: '体魄', wil: '意志', cha: '魅力', men: '心境', cre: '创造'}[attr]}
                             </option>
                           ))}
                         </select>
@@ -989,9 +989,9 @@ const AchievementSystem: React.FC<AchievementSystemProps> = ({
                       onChange={(e) => setNewTitle({...newTitle, attributeRequirement: e.target.value as keyof Attributes})}
                       className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
-                      {['int', 'str', 'vit', 'cha', 'eq', 'cre'].map((attr) => (
+                      {['int', 'phy', 'wil', 'cha', 'men', 'cre'].map((attr) => (
                         <option key={attr} value={attr}>
-                          {{int: '智力', str: '体魄', vit: '精力', cha: '社交', eq: '情感', cre: '创造'}[attr]}
+                          {{int: '智识', phy: '体魄', wil: '意志', cha: '魅力', men: '心境', cre: '创造'}[attr]}
                         </option>
                       ))}
                     </select>

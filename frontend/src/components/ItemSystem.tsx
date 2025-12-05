@@ -11,11 +11,11 @@ interface ItemSystemProps {
 }
 
 const attributeConfig: Record<string, { name: string; icon: string; color: string }> = {
-  int: { name: '智力', icon: 'book-open', color: 'var(--int-color)' },
-  str: { name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
-  vit: { name: '精力', icon: 'battery', color: 'var(--vit-color)' },
-  cha: { name: '社交', icon: 'users', color: 'var(--cha-color)' },
-  eq: { name: '情感', icon: 'heart', color: 'var(--eq-color)' },
+  int: { name: '智识', icon: 'book-open', color: 'var(--int-color)' },
+  phy: { name: '体魄', icon: 'dumbbell', color: 'var(--str-color)' },
+  wil: { name: '意志', icon: 'battery', color: 'var(--vit-color)' },
+  cha: { name: '魅力', icon: 'users', color: 'var(--cha-color)' },
+  men: { name: '心境', icon: 'heart', color: 'var(--eq-color)' },
   cre: { name: '创造', icon: 'palette', color: 'var(--cre-color)' }
 };
 

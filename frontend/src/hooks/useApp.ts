@@ -673,11 +673,11 @@ export const useApp = () => {
 
   // 属性名称映射
   const attributeNames: Record<string, string> = {
-    int: '智力',
-    str: '体魄',
-    vit: '精力',
-    cha: '社交',
-    eq: '情感',
+    int: '智识',
+    phy: '体魄',
+    wil: '意志',
+    cha: '魅力',
+    men: '心境',
     cre: '创造'
   };
 
