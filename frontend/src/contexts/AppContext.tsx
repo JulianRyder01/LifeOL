@@ -41,7 +41,7 @@ interface AppContextType {
   handleCompleteProjectEvent: (id: string) => void;
   handleResetProjectEvent: (id: string) => void;
   handleDeleteProjectEvent: (id: string) => void;
-  getRecentActivities: () => (Event & { id: string; title: string; description: string; timestamp: string; expGains: Record<string, number> })[];
+  getRecentActivities: () => (Event & { type: string })[];
   formatActivityTime: (timestamp: string) => string;
   handleAddCustomAchievement: (achievementData: Partial<Achievement>) => void;
   handleAddCustomTitle: (titleData: Partial<Achievement>) => void;
@@ -49,6 +49,10 @@ interface AppContextType {
   createCustomCondition: (triggerType: string, condition: string) => (attributes: Attributes, events: Event[]) => boolean;
   handleUserConfigChange: (newConfig: UserConfig) => void;
   attributeNames: Record<string, string>;
+  // [修改开始] 添加缺失的函数类型定义
+  handleImportData: (file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => void;
+  handleResetData: () => void;
+  // [修改结束]
 }
 
 // Create the context with default values

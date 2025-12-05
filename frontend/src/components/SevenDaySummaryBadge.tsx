@@ -34,10 +34,10 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
     // 计算各属性经验值增益
     const attributeGains: Record<string, number> = {
       int: 0,
-      str: 0,
-      vit: 0,
+      phy: 0,
+      wil: 0,
       cha: 0,
-      eq: 0,
+      men: 0,
       cre: 0
     };
 
@@ -67,17 +67,90 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
     // 徽章列表（按优先级排序）
     const badges: Badge[] = [
       // 属性专项类徽章
-      ...ATTRIBUTE_KEYS.map((key) => {
-        const config = ATTRIBUTE_CONFIG[key];
-        return {
-          id: `${config.name.toLowerCase()}-specialist`,
-          title: `${config.name}专家`,
-          description: `你在${config.name}方面表现卓越！`,
-          icon: config.icon,
-          condition: `${config.name}属性经验值 ≥ 150`,
-          unlocked: false // Will be determined based on user's actual progress
-        };
-      }),
+      {
+        id: 'study-god',
+        title: '学神附体',
+        description: '智识超群，学习如喝水般轻松！',
+        icon: '🧠',
+        condition: '七天智识经验值 ≥ 150'
+      },
+      {
+        id: 'mind-active',
+        title: '思维活跃',
+        description: '大脑高速运转，灵感源源不断！',
+        icon: '💡',
+        condition: '七天智识经验值 ≥ 80'
+      },
+      {
+        id: 'energetic',
+        title: '活力无限',
+        description: '体力充沛，仿佛有使不完的劲！',
+        icon: '⚡',
+        condition: '七天体魄经验值 ≥ 300'
+      },
+      {
+        id: 'fitness',
+        title: '健身达人',
+        description: '规律运动，身体倍儿棒！',
+        icon: '💪',
+        condition: '七天体魄经验值 ≥ 100'
+      },
+      {
+        id: 'charged',
+        title: '元气满满',
+        description: '意志坚定，精神饱满！',
+        icon: '🔋',
+        condition: '七天意志经验值 ≥ 120'
+      },
+      {
+        id: 'efficient',
+        title: '高效能',
+        description: '专注力提升，做事效率极高！',
+        icon: '⏱️',
+        condition: '七天意志经验值 ≥ 60'
+      },
+      {
+        id: 'network',
+        title: '社交名流',
+        description: '长袖善舞，人脉广泛！',
+        icon: '🤝',
+        condition: '七天魅力经验值 ≥ 150'
+      },
+      {
+        id: 'social-active',
+        title: '活跃分子',
+        description: '积极参与社交，朋友遍天下！',
+        icon: '🗣️',
+        condition: '七天魅力经验值 ≥ 80'
+      },
+      {
+        id: 'emotion-master',
+        title: '情商大师',
+        description: '洞察人心，情绪管理大师！',
+        icon: '❤️',
+        condition: '七天心境经验值 ≥ 100'
+      },
+      {
+        id: 'inner-growth',
+        title: '内在成长',
+        description: '内心平静，自我认知提升！',
+        icon: '🧘',
+        condition: '七天心境经验值 ≥ 50'
+      },
+      {
+        id: 'inspiration',
+        title: '灵感缪斯',
+        description: '创意无限，灵感爆棚！',
+        icon: '🎨',
+        condition: '七天创造经验值 ≥ 150'
+      },
+      {
+        id: 'creator',
+        title: '创造者',
+        description: '动手能力强，创造美好事物！',
+        icon: '🛠️',
+        condition: '七天创造经验值 ≥ 80'
+      },
       
       // 总经验值类徽章
       {
@@ -85,40 +158,35 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
         title: '人生赢家',
         description: '全方位发展，生活丰富多彩！',
         icon: '👑',
-        condition: '一周总经验值 ≥ 700',
-        unlocked: false
+        condition: '一周总经验值 ≥ 700'
       },
       {
         id: 'momentum',
         title: '势如破竹',
         description: '保持着良好的发展势头！',
         icon: '🚀',
-        condition: '一周总经验值 ≥ 500',
-        unlocked: false
+        condition: '一周总经验值 ≥ 500'
       },
       {
         id: 'steady',
         title: '稳步前行',
         description: '稳定的发展步伐，持续进步！',
         icon: '🚶',
-        condition: '一周总经验值 ≥ 200',
-        unlocked: false
+        condition: '一周总经验值 ≥ 200'
       },
       {
         id: 'persevering',
         title: '坚持不懈',
         description: '即使进步微小，也在坚持努力！',
         icon: '🐌',
-        condition: '一周总经验值 ≥ 50',
-        unlocked: false
+        condition: '一周总经验值 ≥ 50'
       },
       {
         id: 'plain',
         title: '平淡是真',
         description: '平平淡淡，也有别样精彩！',
         icon: '🍃',
-        condition: '一周总经验值在-50到50之间',
-        unlocked: false
+        condition: '一周总经验值在-50到50之间'
       },
       
       // 特殊成就类徽章
@@ -127,16 +195,14 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
         title: '全能战士',
         description: '你全面发展，没有短板！',
         icon: '🏅',
-        condition: '所有属性经验值 ≥ 10',
-        unlocked: false
+        condition: '所有属性经验值 ≥ 10'
       },
       {
         id: 'breakthrough',
         title: '突破自我',
         description: '恭喜你，又一次超越了自己！',
         icon: '🌟',
-        condition: '待定义',
-        unlocked: false
+        condition: '待定义'
       }
     ];
 
@@ -163,7 +229,7 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
     if (maxAttribute.gain > 0) {
       // 检查是否显著高于其他属性（至少是第二名的1.5倍）
       const sortedGains = Object.values(attributeGains).sort((a, b) => b - a);
-      const isDominant = sortedGains[0] >= sortedGains[1] * 1.5;
+      const isDominant = sortedGains[0] >= (sortedGains[1] || 0) * 1.5;
       
       if (isDominant) {
         switch (maxAttribute.attr) {
@@ -174,17 +240,17 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
               satisfiedBadges.push(badges.find(b => b.id === 'mind-active')!);
             }
             break;
-          case 'str':
-            if (attributeGains.str >= 300) {
+          case 'phy':
+            if (attributeGains.phy >= 300) {
               satisfiedBadges.push(badges.find(b => b.id === 'energetic')!);
-            } else if (attributeGains.str >= 100) {
+            } else if (attributeGains.phy >= 100) {
               satisfiedBadges.push(badges.find(b => b.id === 'fitness')!);
             }
             break;
-          case 'vit':
-            if (attributeGains.vit >= 120) {
+          case 'wil':
+            if (attributeGains.wil >= 120) {
               satisfiedBadges.push(badges.find(b => b.id === 'charged')!);
-            } else if (attributeGains.vit >= 60) {
+            } else if (attributeGains.wil >= 60) {
               satisfiedBadges.push(badges.find(b => b.id === 'efficient')!);
             }
             break;
@@ -195,10 +261,10 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
               satisfiedBadges.push(badges.find(b => b.id === 'social-active')!);
             }
             break;
-          case 'eq':
-            if (attributeGains.eq >= 100) {
+          case 'men':
+            if (attributeGains.men >= 100) {
               satisfiedBadges.push(badges.find(b => b.id === 'emotion-master')!);
-            } else if (attributeGains.eq >= 50) {
+            } else if (attributeGains.men >= 50) {
               satisfiedBadges.push(badges.find(b => b.id === 'inner-growth')!);
             }
             break;
@@ -223,7 +289,8 @@ const SevenDaySummaryBadge: React.FC<SevenDaySummaryBadgeProps> = ({ events, att
     // 如果有满足条件的徽章，返回优先级最高的一个
     if (satisfiedBadges.length > 0) {
       // 返回第一个满足条件的徽章（根据上面的优先级顺序）
-      return satisfiedBadges[0];
+      // Filter out any undefined entries just in case
+      return satisfiedBadges.filter(b => b !== undefined)[0];
     }
 
     // 默认徽章

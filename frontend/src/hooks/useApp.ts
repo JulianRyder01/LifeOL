@@ -21,8 +21,15 @@ import {
   INITIAL_ACHIEVEMENTS, 
   checkAttributeDecay 
 } from '../utils/achievements';
+<<<<<<< HEAD
 import { saveUserConfig, loadUserConfig, getInitialUserConfig } from '../utils/userConfig';
 import { toast } from 'react-toastify';
+=======
+import { saveUserConfig, loadUserConfig, getInitialUserConfig, resetUserData } from '../utils/userConfig';
+// [修改开始] 引入数据导入工具
+import { importUserDataFromFile } from '../utils/dataImportExport';
+// [修改结束]
+>>>>>>> temp
 
 export const useApp = () => {
   // Attribute names mapping
@@ -287,15 +294,15 @@ export const useApp = () => {
       item.effects.forEach(effect => {
         if (effect.attribute in updatedAttributes) {
           hasChanges = true;
-          const currentExp = updatedAttributes[effect.attribute].exp;
+          const currentExp = updatedAttributes[effect.attribute as keyof Attributes].exp;
           const expGain = effect.type === 'fixed' 
             ? effect.value 
             : Math.floor(currentExp * (effect.value / 100));
         
-          updatedAttributes[effect.attribute] = {
-            ...updatedAttributes[effect.attribute],
-            exp: currentExp + expGain,
-            level: calculateLevel(currentExp + expGain)
+          updatedAttributes[effect.attribute as keyof Attributes] = {
+              ...updatedAttributes[effect.attribute as keyof Attributes],
+              exp: currentExp + expGain,
+              level: calculateLevel(currentExp + expGain)
           };
         }
       });
@@ -318,11 +325,17 @@ export const useApp = () => {
       description: item.description || `使用了 ${item.name}`,
       timestamp: new Date().toISOString(),
       expGains: item.effects?.reduce((acc, effect) => {
+<<<<<<< HEAD
         if (effect.attribute in attributes) {
           acc[effect.attribute] = effect.type === 'fixed' 
             ? effect.value 
             : Math.floor(attributes[effect.attribute].exp * (effect.value / 100));
         }
+=======
+        acc[effect.attribute] = effect.type === 'fixed' 
+          ? effect.value 
+                    : Math.floor(attributes[effect.attribute as keyof Attributes].exp * (effect.value / 100));
+>>>>>>> temp
         return acc;
       }, {} as Record<string, number>) || {},
       relatedItemId: item.id
@@ -340,7 +353,7 @@ export const useApp = () => {
     
     // Mark item as used
     const updatedItems = items.map(item => 
-      item.id === itemToUse.id ? { ...item, used: true } : item
+            item.id === itemToUse.id ? { ...item, used: true, usedAt: new Date().toISOString() } : item
     );
     setItems(updatedItems);
     
@@ -352,13 +365,13 @@ export const useApp = () => {
       itemToUse.effects.forEach(effect => {
         if (effect.attribute in updatedAttributes) {
           hasAttributeChanges = true;
-          const currentExp = updatedAttributes[effect.attribute].exp;
+                    const currentExp = updatedAttributes[effect.attribute as keyof Attributes].exp;
           const expGain = effect.type === 'fixed' 
             ? effect.value 
             : Math.floor(currentExp * (effect.value / 100));
           
-          updatedAttributes[effect.attribute] = {
-            ...updatedAttributes[effect.attribute],
+                    updatedAttributes[effect.attribute as keyof Attributes] = {
+                        ...updatedAttributes[effect.attribute as keyof Attributes],
             exp: currentExp + expGain,
             level: calculateLevel(currentExp + expGain)
           };
@@ -370,7 +383,7 @@ export const useApp = () => {
         
         // Create event for using the item
         const effectDescriptions = itemToUse.effects?.map(effect => 
-          `${effect.attribute}: +${effect.type === 'fixed' ? effect.value : effect.value + '%'}`
+                    `${attributeNames[effect.attribute] || effect.attribute}: +${effect.type === 'fixed' ? effect.value : effect.value + '%'}`
         ).join(', ') || '';
         
         const useEvent: Event = {
@@ -418,13 +431,13 @@ export const useApp = () => {
       item.effects.forEach(effect => {
         if (effect.attribute in updatedAttributes) {
           hasChanges = true;
-          const currentExp = updatedAttributes[effect.attribute].exp;
+                    const currentExp = updatedAttributes[effect.attribute as keyof Attributes].exp;
           const expLoss = effect.type === 'fixed' 
             ? effect.value 
             : Math.floor(currentExp * (effect.value / 100));
           
-          updatedAttributes[effect.attribute] = {
-            ...updatedAttributes[effect.attribute],
+                    updatedAttributes[effect.attribute as keyof Attributes] = {
+                        ...updatedAttributes[effect.attribute as keyof Attributes],
             exp: Math.max(0, currentExp - expLoss), // Ensure EXP doesn't go below 0
             level: calculateLevel(Math.max(0, currentExp - expLoss))
           };
@@ -445,7 +458,7 @@ export const useApp = () => {
     
     // Mark item as unused
     const updatedItems = items.map(item => 
-      item.id === itemId ? { ...item, used: false } : item
+            item.id === itemId ? { ...item, used: false, usedAt: undefined } : item
     );
     setItems(updatedItems);
   }, [attributes, events, items]);
@@ -569,6 +582,7 @@ export const useApp = () => {
           ? { 
               ...event, 
               progress: 0,
+                        completedAt: undefined, // Make sure to reset completedAt
               progressLog: [] // Clear progress log when resetting
             } 
         : event
@@ -582,9 +596,57 @@ export const useApp = () => {
   }, []);
 
   // Filter events to show in "Recent Activities"
+<<<<<<< HEAD
   const getRecentActivities = useCallback(() => {
     return recentActivities;
   }, [recentActivities]);
+=======
+  const getRecentActivities = () => {
+    // Get regular events
+        const regularEvents = [...events].map(e => ({ ...e, type: 'event' }));
+    
+    // Get task completion events
+    const taskEvents = projectEvents
+            .filter(task => task.completedAt)
+      .map(task => ({
+        id: `task-${task.id}`,
+        title: `完成任务: ${task.title}`,
+        description: `成功完成了任务"${task.title}"`,
+                timestamp: task.completedAt!,
+                expGains: {} as Record<string, number>,
+                type: 'task'
+      }));
+    
+    // Get achievement unlock events
+    const achievementEvents = achievements
+      .filter(ach => ach.unlockedAt)
+      .map(ach => ({
+        id: `ach-${ach.id}`,
+        title: `解锁成就: ${ach.title}`,
+        description: ach.description || '',
+                timestamp: ach.unlockedAt!,
+                expGains: {} as Record<string, number>,
+                type: 'achievement'
+      }));
+    
+    // Get item acquisition events
+    const itemEvents = items
+      .map(item => ({
+        id: `item-${item.id}`,
+        title: `获得道具: ${item.name}`,
+        description: item.description || '',
+        timestamp: item.createdAt,
+                expGains: {} as Record<string, number>,
+                type: 'item'
+      }));
+    
+    // Combine all events and sort by timestamp
+    const allEvents = [...regularEvents, ...taskEvents, ...achievementEvents, ...itemEvents];
+    return allEvents.sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  };
+>>>>>>> temp
 
   // Format time for recent activities
   const formatActivityTime = useCallback((timestamp: string) => {
@@ -617,7 +679,7 @@ export const useApp = () => {
       isTitle: achievementData.isTitle || false,
       attributeRequirement: achievementData.attributeRequirement,
       levelRequirement: achievementData.levelRequirement,
-      ...(achievementData as any).useMarkdown !== undefined && { useMarkdown: (achievementData as any).useMarkdown }
+            ...((achievementData as any).useMarkdown !== undefined && { useMarkdown: (achievementData as any).useMarkdown })
     };
     
     setAchievements(prev => [...prev, newAchievement]);
@@ -639,7 +701,7 @@ export const useApp = () => {
       target: titleData.target,
       attributeRequirement: titleData.attributeRequirement,
       levelRequirement: titleData.levelRequirement,
-      ...(titleData as any).useMarkdown !== undefined && { useMarkdown: (titleData as any).useMarkdown }
+            ...((titleData as any).useMarkdown !== undefined && { useMarkdown: (titleData as any).useMarkdown })
     };
     
     setAchievements(prev => [...prev, newTitle]);
@@ -652,7 +714,7 @@ export const useApp = () => {
       description: badgeData.description || '',
       icon: badgeData.icon || '🎖️',
       isCustom: true,
-      isTitle: false,
+            isTitle: false, // Badges are not titles
       unlockedAt: null,
       triggerType: badgeData.triggerType,
       triggerCondition: badgeData.triggerCondition,
@@ -660,11 +722,12 @@ export const useApp = () => {
       target: badgeData.target,
       attributeRequirement: badgeData.attributeRequirement,
       levelRequirement: badgeData.levelRequirement,
-      ...(badgeData as any).useMarkdown !== undefined && { useMarkdown: (badgeData as any).useMarkdown }
+            ...((badgeData as any).useMarkdown !== undefined && { useMarkdown: (badgeData as any).useMarkdown })
     };
     
     setAchievements(prev => [...prev, newBadge]);
   }, []);
+
 
   // Helper function to create custom achievement conditions
   const createCustomCondition = useCallback((triggerType: string, condition: string) => {
@@ -675,19 +738,19 @@ export const useApp = () => {
       
       case 'events':
         const count = parseInt(condition);
-        return (attributes: Attributes, events: Event[]) => events.length >= count;
+                return (_attributes: Attributes, events: Event[]) => events.length >= count;
       
       case 'keyword':
         const keywords = condition.split(',').map(k => k.trim());
-        return (attributes: Attributes, events: Event[]) => events.some(event => 
+                return (_attributes: Attributes, events: Event[]) => events.some(event =>
           keywords.some(keyword => 
-            event.title.includes(keyword) || event.description.includes(keyword)
+                        event.title.includes(keyword) || (event.description && event.description.includes(keyword))
           )
         );
       
       case 'streak':
         const days = parseInt(condition);
-        return (attributes: Attributes, events: Event[]) => {
+                return (_attributes: Attributes, events: Event[]) => {
           const today = new Date();
           for (let i = 0; i < days; i++) {
             const targetDate = new Date(today);
@@ -709,7 +772,47 @@ export const useApp = () => {
   // Handle user config change
   const handleUserConfigChange = useCallback((newConfig: UserConfig) => {
     setUserConfig(newConfig);
+<<<<<<< HEAD
   }, []);
+=======
+  };
+    
+    // [修改开始] 添加数据导入和重置的处理函数
+    const handleImportData = (file: File, setStatus: (status: { type: 'success' | 'error' | null; message: string }) => void) => {
+        if (window.confirm('导入数据将会覆盖您当前的所有本地数据，确定要继续吗？')) {
+            importUserDataFromFile(file, (success) => {
+                if (success) {
+                    setStatus({ type: 'success', message: '数据导入成功！页面将自动刷新。' });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    setStatus({ type: 'error', message: '数据导入失败，请检查文件格式是否正确。' });
+                    setTimeout(() => setStatus({ type: null, message: '' }), 3000);
+                }
+            });
+        }
+    };
+
+    const handleResetData = () => {
+        if (window.confirm('警告：此操作将清除所有本地数据并重置应用，且无法撤销。您确定要重开人生吗？')) {
+            resetUserData();
+            // 在 utils/userConfig.ts 中已移除 reload，此处执行以确保状态刷新
+            window.location.reload();
+        }
+    };
+    // [修改结束]
+
+  // 属性名称映射
+  const attributeNames: Record<string, string> = {
+    int: '智识',
+    phy: '体魄',
+    wil: '意志',
+    cha: '魅力',
+    men: '心境',
+    cre: '创造'
+  };
+>>>>>>> temp
 
   return {
     // States

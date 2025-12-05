@@ -23,7 +23,7 @@
   },
   "include": [
     "src/**/*",
-    "main.tsx"
+    "src/main.tsx"
   ],
   "references": [
     {
